@@ -105,18 +105,20 @@ that claim — including the core that took four attempts and failed three of th
 
 ## Where this lives
 
-**Canonical: Framagit** — hosted by [Framasoft](https://framasoft.org/), a French non-profit.
-Chosen deliberately: a repository about jurisdictional dependence in public-sector software should
-not itself sit under the jurisdiction it is discussing, and one of the five libraries here —
-METRo — is already published on that same infrastructure.
+**Published here on GitHub, under [the-dark-factory](https://github.com/the-dark-factory).**
 
-Any copy elsewhere is a mirror. If a mirror and this repository disagree, this one is correct.
+We intend to move the canonical copy to **Framagit**, hosted by the French non-profit
+[Framasoft](https://framasoft.org/), and to keep GitHub as a mirror. The reasoning, stated now
+rather than after the fact: a repository about jurisdictional dependence in public-sector software
+sits oddly under the jurisdiction it is discussing — and METRo, one of the five libraries converted
+here, is already published on that same Framasoft infrastructure. The account is awaiting approval;
+Framasoft moderate new registrations by hand, which is a point in their favour and also a wait.
 
-**You do not have to trust the host, and that is the point.** Every core's SHA-256 is bound into
-a signed receipt in [`receipts/`](receipts/). Alter a file here and it stops matching its receipt,
-and the prover gives a different answer. A compromised host can remove this work; it cannot
-silently change it. That is the same argument the repository makes about software generally,
-applied to itself.
+**You do not have to trust the host, and that is the point.** Every core's SHA-256 is bound into a
+signed receipt in [`receipts/`](receipts/). Alter a file here and it stops matching its receipt, and
+the prover gives a different answer. A host — this one or any other — can remove this work; it
+cannot silently change it. That is the same argument this repository makes about software
+generally, turned on itself.
 
 ## Licences
 

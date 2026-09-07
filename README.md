@@ -107,12 +107,15 @@ that claim — including the core that took four attempts and failed three of th
 
 **Published here on GitHub, under [the-dark-factory](https://github.com/the-dark-factory).**
 
-We intend to move the canonical copy to **Framagit**, hosted by the French non-profit
-[Framasoft](https://framasoft.org/), and to keep GitHub as a mirror. The reasoning, stated now
-rather than after the fact: a repository about jurisdictional dependence in public-sector software
-sits oddly under the jurisdiction it is discussing — and METRo, one of the five libraries converted
-here, is already published on that same Framasoft infrastructure. The account is awaiting approval;
-Framasoft moderate new registrations by hand, which is a point in their favour and also a wait.
+**Mirrored on [Framagit](https://framagit.org/), hosted by the French non-profit
+[Framasoft](https://framasoft.org/).** The reasoning, stated now rather than after the fact: a
+repository about jurisdictional dependence in public-sector software sits oddly under the
+jurisdiction it is discussing — and METRo, one of the five libraries converted here, is already
+published on that same Framasoft infrastructure.
+
+The GitHub address above stays the published one, because it is the address already given out and
+changing it later would be its own small dishonesty. The mirror exists so that the work does not
+depend on a single host, in a single country, staying willing to carry it.
 
 **You do not have to trust the host, and that is the point.** Every core's SHA-256 is bound into a
 signed receipt in [`receipts/`](receipts/). Alter a file here and it stops matching its receipt, and

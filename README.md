@@ -91,7 +91,7 @@ for these receipts is **measured**, not **attested**.
 
 ## No frontier model was involved
 
-Every core here was emitted by a **27-billion-parameter open-weight model on a
+Every core here was emitted by a **26.9-billion-parameter open-weight model on a
 single laptop** — no API, no cloud, no data leaving the machine — and checked by
 a prover on hardware we own.
 

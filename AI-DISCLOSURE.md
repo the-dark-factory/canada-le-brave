@@ -17,7 +17,7 @@ The pipeline that produced these files is:
    description in English of the types, the operations and the properties to
    state. This is the stage where most of the judgement about *how to say it*
    lives, and it is not a local stage.
-3. A **27-billion-parameter open-weight model, running locally on a laptop**,
+3. A **26.9-billion-parameter open-weight model, running locally on a laptop**,
    emitted the Ada/SPARK package specification from that prose. **No human
    hand-wrote the Ada**, and no hosted service saw this step.
 4. **GNATprove** — an ordinary, independent, publicly available prover, run
@@ -127,7 +127,7 @@ excluded, it was excluded.
 
 ## This did not need a frontier model, and that is the point
 
-Every core in this repository was emitted by a **27-billion-parameter
+Every core in this repository was emitted by a **26.9-billion-parameter
 open-weight model running locally on a single laptop**. No frontier model, no
 API, no cloud, no data leaving the machine. The proving and the independent
 re-proving also ran on ordinary hardware we own.
@@ -157,6 +157,26 @@ this repository.
 ⚠ We are not claiming a small model is as capable as a large one. It is not. It
 needs more rounds and more careful prose. The claim is narrower and more useful:
 **with a prover in the loop, it does not have to be.**
+
+
+## The model that wrote this, named
+
+The generator is **"Rosie"** — our own Ada/SPARK fine-tune of a Qwen model, **26.9B parameters**,
+4-bit quantised, run locally under ollama on a laptop. It is not a general-purpose assistant and
+is not good at very much; it was trained to emit one kind of artefact.
+
+**We intend to open-source it.** Not yet — it is at v0.3 with v0.4 in training, and releasing a
+model is a thing to do properly or not at all. But the argument this repository makes does not
+work if the generator is a secret: "a small local model is sufficient when a prover checks it" is
+a claim you should be able to test, and you cannot test it against a model you have never seen.
+
+⚠ **Two things we will not state until we have confirmed them**, because getting either wrong in
+public would be worse than waiting: the exact base model and version, and therefore which base
+licence binds a derivative. Our own tag and the architecture string reported by the runtime do not
+currently agree, and we would rather say that than pick the more flattering reading.
+
+Until then, what matters for judging this repository is unchanged and does not depend on the
+model at all: **the proofs discharge, or they do not, and you can run them yourself.**
 
 ## Known specifics
 

@@ -139,6 +139,12 @@ which extends to network use.
 - **Not** that the re-expression is equivalent to the original. That
   correspondence is human reading, not proof, and we have not proved it.
 
+## Independent verification — please
+
+Nothing here has been checked by anyone outside this company. If you would re-run it, or better,
+**read the postconditions and tell us whether they say anything worth saying**, see
+[`VERIFICATION.md`](VERIFICATION.md). Disagreements get published unedited, in your words.
+
 ## The thing we got wrong
 
 We chose these five from outside Canada, by **what was easy to prove** — a clean

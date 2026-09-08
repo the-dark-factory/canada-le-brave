@@ -59,8 +59,21 @@ suppressed.
 
 ⚠ **The trap worth knowing:** GNATprove reports a clean summary for a package
 that asserts nothing. Judge on *contracts present AND discharged*, never on the
-total row. Every function here carries a `Post` and an expression-function
-completion — check that before you accept any clean run, here or anywhere.
+total row — including here.
+
+**Counted:** this repository has **44 functions, of which 18 carry a `Post`.** All
+44 are expression functions, so for the other 26 the body is the definition and a
+postcondition restating it would prove only itself. The contracts that carry weight
+sit on the composite operations — the `Pack`/`Unpack` round trip, the prorate
+bound, the METRo index map — with the decomposers visible in full underneath them.
+Whether that is enough is yours to judge; the sources are here and you can count it
+yourself.
+
+⚠ **Corrected 2026-09-08.** This paragraph previously read *"Every function here
+carries a `Post` and an expression-function completion."* The second half is true
+of all 44; the first is true of 18. `liampwll` on forum.ada-lang.io caught it. A
+paragraph warning you not to trust a total row had no business carrying an
+uncounted claim of its own.
 
 **Solver grade, stated exactly.** Run each back-end alone and you get: Z3 — 0
 unproved; CVC5 — 1; Alt-Ergo — 3. Three checks lean on Z3 (a bound in the Banff

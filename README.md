@@ -27,7 +27,7 @@ Now some has been. It is small, specific, and re-runnable by anyone.
 | [gensol-banff](https://github.com/StatCan/gensol-banff) | Statistics Canada | GPL-3.0 | 1 |
 | [crc-covlib](https://github.com/ic-crc/crc-covlib) | ISED — Communications Research Centre | MIT | 1 |
 
-**Ten cores. Five libraries. Four departments. 169 proof obligations, none unproved.**
+**Ten cores. Five libraries. Four departments. 161 proof obligations, none unproved.**
 
 A **core** is not a rewrite. It is one small piece of the original — a function,
 or a tight cluster of them — re-expressed in SPARK Ada with the properties the
@@ -44,15 +44,15 @@ git clone <this repo> && cd canada-le-brave
 gnatprove -P check.gpr --level=2
 ```
 
-Expect **169 checks, 0 unproved**, of which **50 are functional contracts**.
+Expect **161 checks, 0 unproved**, of which **50 are functional contracts**.
 
 **What that buys, in plain terms.** The 50 functional contracts mean the stated
 properties are proved — not tested on examples, but proved for every input
-satisfying the preconditions. The 73 run-time checks mean this source is proved
+satisfying the preconditions. The 69 run-time checks mean this source is proved
 free of integer overflow, division by zero, and range and index violations,
 within the SPARK subset and those preconditions, for **all** admissible inputs.
 In SPARK terms that is *absence of run-time errors*, and it is normally the
-expensive part. 46 termination checks discharge too. **Nothing is justified
+expensive part. 42 termination checks discharge too. **Nothing is justified
 away** — GNATprove allows unproved checks to be dismissed with a `pragma
 Annotate`; there are none in this repository. 0 unproved, 0 justified, 0
 suppressed.
@@ -61,28 +61,45 @@ suppressed.
 that asserts nothing. Judge on *contracts present AND discharged*, never on the
 total row — including here.
 
-**Counted:** this repository has **44 functions, of which 18 carry a `Post`.** All
-44 are expression functions, so for the other 26 the body is the definition and a
+**Counted:** this repository has **40 functions, of which 24 carry a `Post`.** All
+40 are expression functions, so for the other 16 the body is the definition and a
 postcondition restating it would prove only itself. The contracts that carry weight
-sit on the composite operations — the `Pack`/`Unpack` round trip, the prorate
-bound, the METRo index map — with the decomposers visible in full underneath them.
-Whether that is enough is yours to judge; the sources are here and you can count it
-yourself.
+sit on the composite operations — the `Pack`/`Unpack` round trip, the telescoping
+conservation law, the METRo index map — with the decomposers visible in full
+underneath them. Whether that is enough is yours to judge; the sources are here
+and you can count it yourself.
 
-⚠ **Corrected 2026-09-08.** This paragraph previously read *"Every function here
-carries a `Post` and an expression-function completion."* The second half is true
-of all 44; the first is true of 18. `liampwll` on forum.ada-lang.io caught it. A
-paragraph warning you not to trust a total row had no business carrying an
-uncounted claim of its own.
+⚠ **Two corrections, both made 2026-09-08, both prompted by `liampwll` on
+forum.ada-lang.io.**
 
-**Solver grade, stated exactly.** Run each back-end alone and you get: Z3 — 0
-unproved; CVC5 — 1; Alt-Ergo — 3. Three checks lean on Z3 (a bound in the Banff
-prorate arithmetic, the METRo round-trip postcondition, and a state-recovery
-bound in one EGSnrc generator). Every check is discharged by at least one sound
-prover, and all 169 discharge with the provers used together. We would rather
-you heard that from us.
+**One.** This paragraph read *"Every function here carries a `Post` and an
+expression-function completion."* The second half was true of all functions; the
+first was true of fewer than half. A paragraph warning you not to trust a total row
+had no business carrying an uncounted claim of its own.
+
+**Two, and it is the serious one.** Two cores declared properties and never
+asserted them. `Banff_Prorate_Pkg` defined `Conserved`, `No_Component_Exceeds_Total`
+and `Shortfall_Is_Bounded`; `Bufr_Af_Shifts_Pkg` defined `Every_Field_Fits`,
+`No_Overlap` and `Exactly_Packed`. None appeared in any contract, so none was
+proved — those packages were precisely the package this section warns you about,
+and we shipped them. They have been **replaced** by `Prorata_Telescope_Pkg` and
+`Bit_Field_Packing_Pkg`, which state their laws as postconditions and discharge
+them. Every Boolean predicate in this repository is now used in a real contract,
+and the figures above are measured from the current sources.
+
+**Solver grade, stated exactly.** Run each back-end alone, from a clean session,
+and you get: **Z3 — 2 unproved; CVC5 — 1; Alt-Ergo — 5.** No single prover clears
+everything, so the clean total depends on the three being used together. We would
+rather you heard that from us.
 
 ## Receipts
+
+⚠ **Two of the ten have no receipt yet.** `Prorata_Telescope_Pkg` and
+`Bit_Field_Packing_Pkg` were forged and proved on 2026-09-08 to replace the two
+cores described above. They are proved, and they are NOT yet independently
+re-proved and signed — admission happens off this machine and had not run when
+this was written. Until a receipt for each appears in `receipts/`, treat those two
+as proved-here-only. The other eight carry receipts as described below.
 
 Each core was re-proved on a machine that did not produce it, and that machine
 signed a receipt binding the core name, the SHA-256 of the exact source, its own

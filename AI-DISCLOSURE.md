@@ -165,17 +165,22 @@ The generator is **"Rosie"** — our own Ada/SPARK fine-tune of a Qwen model, **
 4-bit quantised, run locally under ollama on a laptop. It is not a general-purpose assistant and
 is not good at very much; it was trained to emit one kind of artefact.
 
-**We intend to open-source it.** Not yet — it is at v0.3 with v0.4 in training, and releasing a
-model is a thing to do properly or not at all. But the argument this repository makes does not
-work if the generator is a secret: "a small local model is sufficient when a prover checks it" is
-a claim you should be able to test, and you cannot test it against a model you have never seen.
+**The base model, now confirmed:** `Qwen/Qwen3.8-27B`. An earlier version of this file said our own
+tag and the runtime's architecture string disagreed. They do not disagree — the architecture class
+is `Qwen3_5ForConditionalGeneration`, which belongs to the Qwen3.5 lineage while the model is
+Qwen3.8-27B. One model, not two.
 
-⚠ **Two things we will not state until we have confirmed them**, because getting either wrong in
-public would be worse than waiting: the exact base model and version, and therefore which base
-licence binds a derivative. Our own tag and the architecture string reported by the runtime do not
-currently agree, and we would rather say that than pick the more flattering reading.
+⛔ **We previously said we intended to open-source Rosie. We are withdrawing that, and saying so
+rather than deleting the sentence.** We have not read the base model's licence — it was never
+downloaded with the weights — and we will not distribute a derivative under terms we have not read.
 
-Until then, what matters for judging this repository is unchanged and does not depend on the
+★ **This weakens an argument we made, and we would rather name that than let it pass.** We wrote
+that "a small local model is sufficient when a prover checks it" is a claim you should be able to
+test, and that you cannot test it against a model you have never seen. That is still true. Not
+releasing Rosie does not make the claim false; it makes it **unverifiable from outside**, and you
+should weigh it accordingly — as an assertion of ours, not as something you can check.
+
+What matters for judging this repository is unchanged and does not depend on the
 model at all: **the proofs discharge, or they do not, and you can run them yourself.**
 
 ## Known specifics

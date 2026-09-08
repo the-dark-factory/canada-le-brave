@@ -15,8 +15,15 @@ What is provided is a re-expression, in SPARK Ada, of the behaviour of specific
 subprograms, together with formal contracts stating properties the original
 relies on, machine-checked with GNATprove.
 
-Converted from : BUFR field-layout handling
-Cores          : bit_field_packing_pkg
+Converted from : API/Sources/bufr_af.c:52-89 (bufr_create_af) — the associated-field
+                 layout walk that assigns each field its bit shift as the summed
+                 width of every field after it.
+                 ⚠ SCOPE, narrower than upstream. Upstream constrains only the
+                 TOTAL (bufr_af.c:65 aborts when the summed width exceeds 64)
+                 and places no bound on an individual width or on the field
+                 count. This core fixes widths at 1 .. 63 and the count at
+                 most 8. The bit-level packing that uses these shifts is NOT
+                 modelled — only the layout walk and what follows from it.
 
 Copyright in the upstream work remains with its authors. This derived work is
 (c) 2026 The Dark Factory Ltd and is offered under the same licence as the

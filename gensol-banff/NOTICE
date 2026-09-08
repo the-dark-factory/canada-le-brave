@@ -20,6 +20,15 @@ Converted from : the Sigman-Wagner carry-forward ROUNDING loop of EI_Prorating.c
                  arithmetic itself — v + v*k/weight in floating point, rounded to
                  DecimalPlaces+1 — is NOT modelled. What is modelled is the
                  rounding-to-report step, in whole tenths, with no floating point.
+                 Rounding matches UTIL_Round (STC_C_Libraries/CommonAPI/util.c:726)
+                 exactly: halves away from zero, verified over all 10011 values of
+                 the modelled domain.
+                 ⚠ FURTHER SCOPE. The C loop runs on doubles; this model is a
+                 faithful rendering of it for DecimalPlaces <= 1, where the
+                 tenths are exactly representable. At 2 or more places the
+                 double arithmetic and the integer model can disagree. The C
+                 also admits negative prorated values into the loop; amounts
+                 here are non-negative.
 Cores          : carry_forward_rounding_pkg
 
 Copyright in the upstream work remains with its authors. This derived work is

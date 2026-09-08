@@ -18,7 +18,7 @@ Take the eight `.ads` files, put them in an empty directory with `check.gpr`, an
 gnatprove -P check.gpr --level=2
 ```
 
-Expect **168 checks, 0 unproved, 0 justified** — 50 functional contracts, 76 run-time checks,
+Expect **173 checks, 0 unproved, 0 justified** — 51 functional contracts, 80 run-time checks,
 42 termination. Also worth doing: `--prover=z3`, `--prover=cvc5` and `--prover=altergo`
 separately, to confirm our own statement that this set is **not** 3/3 (Z3 alone 1 unproved,
 CVC5 alone 1, Alt-Ergo alone 2).

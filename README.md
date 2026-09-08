@@ -41,7 +41,7 @@ Now some has been. It is small, specific, and re-runnable by anyone.
 | [METRo](https://framagit.org/metroprojects/metro) | Environment and Climate Change Canada | GPL-2.0 | 1 |
 | [gensol-banff](https://github.com/StatCan/gensol-banff) | Statistics Canada | GPL-3.0 | 1 |
 
-**Eight cores. Four libraries. Three departments. 168 proof obligations, none unproved.**
+**Eight cores. Four libraries. Three departments. 173 proof obligations, none unproved.**
 
 A **core** is not a rewrite. It is one small piece of the original — a function,
 or a tight cluster of them — re-expressed in SPARK Ada with the properties the
@@ -58,11 +58,11 @@ git clone <this repo> && cd canada-le-brave
 gnatprove -P check.gpr --level=2
 ```
 
-Expect **168 checks, 0 unproved**, of which **50 are functional contracts**.
+Expect **173 checks, 0 unproved**, of which **51 are functional contracts**.
 
-**What that buys, in plain terms.** The 50 functional contracts mean the stated
+**What that buys, in plain terms.** The 51 functional contracts mean the stated
 properties are proved — not tested on examples, but proved for every input
-satisfying the preconditions. The 76 run-time checks mean this source is proved
+satisfying the preconditions. The 80 run-time checks mean this source is proved
 free of integer overflow, division by zero, and range and index violations,
 within the SPARK subset and those preconditions, for **all** admissible inputs.
 In SPARK terms that is *absence of run-time errors*, and it is normally the
@@ -75,8 +75,8 @@ suppressed.
 that asserts nothing. Judge on *contracts present AND discharged*, never on the
 total row — including here.
 
-**Counted:** this repository has **37 functions, of which 21 carry a `Post`.** All
-37 are expression functions, so for the other 16 the body is the definition and a
+**Counted:** this repository has **37 functions, of which 22 carry a `Post`.** All
+37 are expression functions, so for the other 15 the body is the definition and a
 postcondition restating it would prove only itself. The contracts that carry weight
 sit on the composite operations — the `Pack`/`Unpack` round trip, the telescoping
 conservation law, the METRo index map — with the decomposers visible in full
@@ -119,6 +119,16 @@ total less exactly the carry, and that the carry is always one rounding's
 residual — so the reported total is never adrift of the true total by a whole
 rounding step, however many components there are. That is the guarantee
 carry-forward rounding exists to provide.
+
+⚠ **Corrected the same day it was published.** The first version of this core
+rounded halves toward plus infinity; `UTIL_Round` rounds them away from zero, and
+the two differ at exactly one point. The tell was the carry subtype coming out
+asymmetric at -5 .. 4 — an artefact of the wrong rule, not a fact about the
+algorithm. It is now -5 .. 5, and the rounding matches over every value of the
+modelled domain. The re-forge also added the property the first version left out:
+**when the true total already lands on the reported precision, the reported total
+equals it exactly** — which is what a balance check actually depends on, and is
+stronger than "never adrift by a whole rounding step".
 
 ⚠ **What it does not model is stated in [`gensol-banff/NOTICE`](gensol-banff/NOTICE)
 rather than left here to be found:** the prorating arithmetic before that loop —

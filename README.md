@@ -1,6 +1,6 @@
 # Canada le Brave
 
-Machine-checked proofs about five open-source libraries published by Canadian
+Machine-checked proofs about four open-source libraries published by Canadian
 federal bodies.
 
 > ### ⚠ Danger, Will Robinson — an LLM is loose in this repository.
@@ -10,8 +10,9 @@ federal bodies.
 > A reader caught it in a day. Fixing that, it then claimed one of those properties
 > was too hard to prove — untrue, it takes six lines — and filed a correct proof of
 > the wrong algorithm under a Statistics Canada notice. An adversarial review caught
-> both before publication. All three corrections are kept below rather than quietly
-> removed.
+> both before publication. An audit of all ten then found two MORE cores proving
+> nothing, and both had been signed by two machines. All corrections are kept below
+> rather than quietly removed. What began as ten cores across five libraries is now eight across four.
 >
 > Every number on this page was re-measured from these sources at this commit, on a
 > clean object directory, because a cached one overstated them by 40% during that
@@ -38,10 +39,9 @@ Now some has been. It is small, specific, and re-runnable by anyone.
 | [EGSnrc](https://github.com/nrc-cnrc/EGSnrc) | National Research Council | AGPL-3.0 | 6 |
 | [libECBUFR](https://github.com/ECCC-MSC/libecbufr) | Environment and Climate Change Canada | GPL-3.0 | 1 |
 | [METRo](https://framagit.org/metroprojects/metro) | Environment and Climate Change Canada | GPL-2.0 | 1 |
-| [crc-covlib](https://github.com/ic-crc/crc-covlib) | ISED — Communications Research Centre | MIT | 1 |
 | [gensol-banff](https://github.com/StatCan/gensol-banff) | Statistics Canada | GPL-3.0 | 1 |
 
-**Ten cores. Five libraries. Four departments. 181 proof obligations, none unproved.**
+**Eight cores. Four libraries. Three departments. 168 proof obligations, none unproved.**
 
 A **core** is not a rewrite. It is one small piece of the original — a function,
 or a tight cluster of them — re-expressed in SPARK Ada with the properties the
@@ -58,15 +58,15 @@ git clone <this repo> && cd canada-le-brave
 gnatprove -P check.gpr --level=2
 ```
 
-Expect **181 checks, 0 unproved**, of which **56 are functional contracts**.
+Expect **168 checks, 0 unproved**, of which **50 are functional contracts**.
 
-**What that buys, in plain terms.** The 56 functional contracts mean the stated
+**What that buys, in plain terms.** The 50 functional contracts mean the stated
 properties are proved — not tested on examples, but proved for every input
-satisfying the preconditions. The 77 run-time checks mean this source is proved
+satisfying the preconditions. The 76 run-time checks mean this source is proved
 free of integer overflow, division by zero, and range and index violations,
 within the SPARK subset and those preconditions, for **all** admissible inputs.
 In SPARK terms that is *absence of run-time errors*, and it is normally the
-expensive part. 48 termination checks discharge too. **Nothing is justified
+expensive part. 42 termination checks discharge too. **Nothing is justified
 away** — GNATprove allows unproved checks to be dismissed with a `pragma
 Annotate`; there are none in this repository. 0 unproved, 0 justified, 0
 suppressed.
@@ -75,15 +75,15 @@ suppressed.
 that asserts nothing. Judge on *contracts present AND discharged*, never on the
 total row — including here.
 
-**Counted:** this repository has **43 functions, of which 26 carry a `Post`.** All
-43 are expression functions, so for the other 17 the body is the definition and a
+**Counted:** this repository has **37 functions, of which 21 carry a `Post`.** All
+37 are expression functions, so for the other 16 the body is the definition and a
 postcondition restating it would prove only itself. The contracts that carry weight
 sit on the composite operations — the `Pack`/`Unpack` round trip, the telescoping
 conservation law, the METRo index map — with the decomposers visible in full
 underneath them. Whether that is enough is yours to judge; the sources are here
 and you can count it yourself.
 
-⚠ **Two corrections, both made 2026-09-08, both prompted by `liampwll` on
+⚠ **Five corrections, all made 2026-09-08. The first two were found by `liampwll` on
 forum.ada-lang.io.**
 
 **One.** This paragraph read *"Every function here carries a `Post` and an
@@ -125,6 +125,36 @@ rather than left here to be found:** the prorating arithmetic before that loop �
 the floating-point `v + v*k/weight` and its rounding to one extra decimal — is not
 covered. This core is about the rounding step, not the share calculation.
 
+
+⚠ **Five, and it is the one that should change how you read the rest.** An
+adversarial audit of all ten cores — done because a reader had already found two
+faults we had not — found two more cores proving nothing, and both had been
+independently re-proved and signed:
+
+- `Ranmar_Index_Pkg` — under its own precondition `Step` is the **identity
+  function**. Its postcondition reduces to its precondition, and both wrap
+  branches are unreachable. RANMAR's actual index step decrements before it wraps;
+  this core has no decrement in it.
+- `Crc_P2108_Guard_Pkg` — every postcondition restated its own expression body, and
+  all three preconditions were `>= 0` on `Natural` subtypes, which is always true.
+  Its NOTICE also named the wrong upstream file.
+
+Both are **withdrawn**, and with the second goes ISED's crc-covlib, which had no
+other core. Ten cores across five libraries are now **eight across four**.
+
+★ **The pattern has a name: a collapsing proof.** The obligation, simplified, is
+something already true — the precondition, the definition, or nothing at all. Every
+fault on this page is one, and `gnatprove` reports 0 unproved for all of them,
+because there was nothing there to fail. **Independent re-proof cannot catch it
+either: the second machine collapses it identically and signs.** If you are judging
+this repository, that is the failure mode to hunt, and it is the reason the counts
+below are worth less than the sources.
+
+⚠ **Two things the numbers do not mean.** Of the termination checks, most are
+automatic flow analysis on non-recursive expression functions; only the recursive
+cores carry a proved `Subprogram_Variant`. Of the functional contracts, fewer than
+half are postconditions — the rest are call-site precondition checks, many of them
+lemmas calling themselves. The total is honest; it is not a count of theorems.
 ⚠ **Four.** An earlier version of this section said the replacement cores dropped
 `No_Overlap` because it needed an induction we could not discharge. That was untrue
 and untested — it takes one six-line lemma and proves in under two seconds. The
@@ -141,7 +171,7 @@ is discharged trivially. We would rather you heard all of that from us.
 
 ## Receipts
 
-⚠ **Two of the ten have no receipt.** `Bit_Field_Packing_Pkg` and `Carry_Forward_Rounding_Pkg` were forged and proved
+⚠ **Two of the eight have no receipt.** `Bit_Field_Packing_Pkg` and `Carry_Forward_Rounding_Pkg` were forged and proved
 on 2026-09-08 to replace `Bufr_Af_Shifts_Pkg`. It is proved here; it is **not** yet
 independently re-proved and signed, because admission happens off this machine and
 had not run when this was written. Until a receipt for it appears in `receipts/`,
@@ -201,7 +231,7 @@ The GitHub address above stays the published one, because it is the address alre
 changing it later would be its own small dishonesty. The mirror exists so that the work does not
 depend on a single host, in a single country, staying willing to carry it.
 
-**You do not have to trust the host, and that is the point.** Eight of the ten cores have their SHA-256 bound into a
+**You do not have to trust the host, and that is the point.** Six of the eight cores have their SHA-256 bound into a
 signed receipt in [`receipts/`](receipts/). Alter a file here and it stops matching its receipt, and
 the prover gives a different answer. A host — this one or any other — can remove this work; it
 cannot silently change it. That is the same argument this repository makes about software

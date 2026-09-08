@@ -5,7 +5,7 @@ federal bodies.
 
 > ### ⚠ Danger, Will Robinson — an LLM is loose in this repository.
 >
-> It wrote the Ada, it drafted the forum post announcing it, and on 2026-09-08 it
+> It wrote the Ada, it drafted the forum post announcing it, and on 2026-09-07 it
 > shipped two packages that each named three properties and proved none of them.
 > A reader caught it in a day. Fixing that, it then claimed one of those properties
 > was too hard to prove — untrue, it takes six lines — and filed a correct proof of

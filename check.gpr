@@ -1,6 +1,6 @@
 --  Minimal project file for re-proving every core in this repository.
 --    gnatprove -P check.gpr --level=2
 project Check is
-   for Source_Dirs use ("egsnrc", "libecbufr", "metro", "gensol-banff");
+   for Source_Dirs use ("egsnrc", "libecbufr", "metro", "gensol-banff", "crc-covlib", "rebar");
    for Object_Dir use "obj";
 end Check;

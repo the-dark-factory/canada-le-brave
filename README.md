@@ -1,6 +1,6 @@
 # Canada le Brave
 
-Machine-checked proofs about four open-source libraries published by Canadian
+Machine-checked proofs about six open-source libraries published by Canadian
 federal bodies.
 
 > ### ⚠ Danger, Will Robinson — an LLM is loose in this repository.
@@ -12,7 +12,7 @@ federal bodies.
 > the wrong algorithm under a Statistics Canada notice. An adversarial review caught
 > both before publication. An audit of all ten then found two MORE cores proving
 > nothing, and both had been signed by two machines. All corrections are kept below
-> rather than quietly removed. What began as ten cores across five libraries is now eight across four.
+> rather than quietly removed. What began as ten cores across five libraries became eight across four; on 2026-09-08 two libraries were added, one of them the one that had left, and it is ten across six.
 >
 > Every number on this page was re-measured from these sources at this commit, on a
 > clean object directory, because a cached one overstated them by 40% during that
@@ -31,7 +31,7 @@ federal bodies.
 Canada's software-sovereignty debate is about ownership. It does not much ask a
 second question: **can anyone check that the software works?**
 
-For these five libraries, no machine-checked evidence had been published at all.
+For these six libraries, no machine-checked evidence had been published at all.
 Now some has been. It is small, specific, and re-runnable by anyone.
 
 | library | department | licence | cores |
@@ -40,8 +40,10 @@ Now some has been. It is small, specific, and re-runnable by anyone.
 | [libECBUFR](https://github.com/ECCC-MSC/libecbufr) | Environment and Climate Change Canada | GPL-3.0 | 1 |
 | [METRo](https://framagit.org/metroprojects/metro) | Environment and Climate Change Canada | GPL-2.0 | 1 |
 | [gensol-banff](https://github.com/StatCan/gensol-banff) | Statistics Canada | GPL-3.0 | 1 |
+| [crc-covlib](https://github.com/ic-crc/crc-covlib) | ISED / Communications Research Centre Canada | MIT | 1 |
+| [rebar](https://github.com/phac-nml/rebar) | Public Health Agency of Canada | Apache-2.0 | 1 |
 
-**Eight cores. Four libraries. Three departments. 173 proof obligations, none unproved.**
+**Ten cores. Six libraries. Five departments. 218 proof obligations, none unproved.**
 
 A **core** is not a rewrite. It is one small piece of the original — a function,
 or a tight cluster of them — re-expressed in SPARK Ada with the properties the
@@ -58,15 +60,15 @@ git clone <this repo> && cd canada-le-brave
 gnatprove -P check.gpr --level=2
 ```
 
-Expect **173 checks, 0 unproved**, of which **51 are functional contracts**.
+Expect **218 checks, 0 unproved**, of which **64 are functional contracts**.
 
-**What that buys, in plain terms.** The 51 functional contracts mean the stated
+**What that buys, in plain terms.** The 64 functional contracts mean the stated
 properties are proved — not tested on examples, but proved for every input
-satisfying the preconditions. The 80 run-time checks mean this source is proved
+satisfying the preconditions. The 97 run-time checks mean this source is proved
 free of integer overflow, division by zero, and range and index violations,
 within the SPARK subset and those preconditions, for **all** admissible inputs.
 In SPARK terms that is *absence of run-time errors*, and it is normally the
-expensive part. 42 termination checks discharge too. **Nothing is justified
+expensive part. 57 termination checks discharge too. **Nothing is justified
 away** — GNATprove allows unproved checks to be dismissed with a `pragma
 Annotate`; there are none in this repository. 0 unproved, 0 justified, 0
 suppressed.
@@ -175,18 +177,52 @@ figures above were measured from the current sources on a clean object directory
 a cached one inflated them by 40% once during this very correction.
 
 **Solver grade, stated exactly.** Run each back-end alone, from a clean session,
-and you get: **Z3 — 1 unproved; CVC5 — 1; Alt-Ergo — 2.** No single prover clears
+and you get: **Z3 — 1 unproved; CVC5 — 4; Alt-Ergo — 5.** No single prover clears
 everything, so the clean total depends on the three being used together. One check
 is discharged trivially. We would rather you heard all of that from us.
 
+## 2026-09-08, later — two libraries added, one of them the one that had left
+
+Forged the same evening, through the same door, by the same local model, and both
+re-proved and signed by the second machine before this was written.
+
+**`antenna_pattern_gain_pkg` — crc-covlib, ISED / Communications Research Centre
+Canada.** The horizontal antenna-pattern lookup (`AntennaPattern.cpp:64-108`): find
+the two table entries around the asked-for azimuth and read the gain off the line
+between them, wrapping last-to-first. Since this is the library that left over a
+collapsing proof, the NOTICE grades its own five contracts: the **band theorem** (the
+answer never leaves the band between the two neighbouring gains) and **exactness at the
+second endpoint** (which needs `(D*X)/D = X` of integer division) carry the weight, and
+two of the three solvers alone cannot discharge them. Exactness at the first endpoint is
+immediate. The two wrap theorems follow from the azimuth domain alone — their content is
+that the fall-through `return 0` on line 107 is unreachable for a table of two or more
+entries, not that they were hard.
+
+**`parsimony_score_pkg` — rebar, Public Health Agency of Canada (National Microbiology
+Laboratory).** A fifth department. The parsimony summary between a sample and a
+population (`parsimony.rs:30-78`): substitutions in both are support, in one only are
+conflicts, and the score is support less both. The theorems are the partitions —
+conflict count equals list length less support, from either side — and the bounds on
+the score that follow. ⚠ Upstream's last commit is 2024-01-02.
+
+★ **What the prover refused, kept on the record.** The first prose for the parsimony
+core claimed the score never exceeds the *sample* list's length as well as the
+population's. GNATprove would not discharge it, and it is false: a population list
+holding one key three times against a sample holding it once scores 3 against a length
+of 1. Upstream cannot hit this — its lists hold one substitution per coordinate — but
+the core does not assume distinctness, so it does not claim the bound. It was withdrawn
+from the claim rather than added as an assumption. That is what a prover is for.
+
+Both NOTICEs state scope: whole-unit models, multiply-before-divide where upstream
+divides first in doubles, the table search and the coordinate filtering not modelled.
+
 ## Receipts
 
-⚠ **Two of the eight have no receipt.** `Bit_Field_Packing_Pkg` and `Carry_Forward_Rounding_Pkg` were forged and proved
-on 2026-09-08 to replace `Bufr_Af_Shifts_Pkg`. It is proved here; it is **not** yet
-independently re-proved and signed, because admission happens off this machine and
-had not run when this was written. Until a receipt for it appears in `receipts/`,
-treat it as proved-here-only. The other eight carry receipts, and their hashes
-match the sources in this tree.
+**All ten cores carry a receipt, and every receipt's hash matches the shipped source.** Two of
+the eight cores of the morning — `Bit_Field_Packing_Pkg` and `Carry_Forward_Rounding_Pkg` — had
+been published proved-here-only because admission had not run; they were admitted from the
+shipped bytes on the evening of 2026-09-08, together with the two new cores. Check:
+`shasum -a 256 */*.ads` against `source_sha256` in `receipts/verify-receipts.jsonl`.
 
 ⚠ **You cannot currently verify a receipt from what is shipped.** `receipts/`
 contains the signer's public key and the receipt records, but not the exact byte
@@ -234,14 +270,14 @@ that claim — including the core that took four attempts and failed three of th
 **Mirrored on [Framagit](https://framagit.org/), hosted by the French non-profit
 [Framasoft](https://framasoft.org/).** The reasoning, stated now rather than after the fact: a
 repository about jurisdictional dependence in public-sector software sits oddly under the
-jurisdiction it is discussing — and METRo, one of the five libraries converted here, is already
+jurisdiction it is discussing — and METRo, one of the six libraries converted here, is already
 published on that same Framasoft infrastructure.
 
 The GitHub address above stays the published one, because it is the address already given out and
 changing it later would be its own small dishonesty. The mirror exists so that the work does not
 depend on a single host, in a single country, staying willing to carry it.
 
-**You do not have to trust the host, and that is the point.** Six of the eight cores have their SHA-256 bound into a
+**You do not have to trust the host, and that is the point.** Every core has its SHA-256 bound into a
 signed receipt in [`receipts/`](receipts/). Alter a file here and it stops matching its receipt, and
 the prover gives a different answer. A host — this one or any other — can remove this work; it
 cannot silently change it. That is the same argument this repository makes about software
@@ -274,7 +310,7 @@ Nothing here has been checked by anyone outside this company. If you would re-ru
 
 ## The thing we got wrong
 
-We chose these five from outside Canada, by **what was easy to prove** — a clean
+We chose these libraries from outside Canada, by **what was easy to prove** — a clean
 round-trip or guard theorem, in a language our tooling handles, small enough to
 finish in one sitting. We did not choose by **what matters to Canada**, because
 we asked nobody Canadian.

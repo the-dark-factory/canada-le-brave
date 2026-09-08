@@ -1,6 +1,6 @@
 # Canada le Brave
 
-Machine-checked proofs about four open-source libraries published by Canadian
+Machine-checked proofs about five open-source libraries published by Canadian
 federal bodies.
 
 > ### ⚠ Danger, Will Robinson — an LLM is loose in this repository.
@@ -39,8 +39,9 @@ Now some has been. It is small, specific, and re-runnable by anyone.
 | [libECBUFR](https://github.com/ECCC-MSC/libecbufr) | Environment and Climate Change Canada | GPL-3.0 | 1 |
 | [METRo](https://framagit.org/metroprojects/metro) | Environment and Climate Change Canada | GPL-2.0 | 1 |
 | [crc-covlib](https://github.com/ic-crc/crc-covlib) | ISED — Communications Research Centre | MIT | 1 |
+| [gensol-banff](https://github.com/StatCan/gensol-banff) | Statistics Canada | GPL-3.0 | 1 |
 
-**Nine cores. Four libraries. Three departments. 156 proof obligations, none unproved.**
+**Ten cores. Five libraries. Four departments. 181 proof obligations, none unproved.**
 
 A **core** is not a rewrite. It is one small piece of the original — a function,
 or a tight cluster of them — re-expressed in SPARK Ada with the properties the
@@ -57,15 +58,15 @@ git clone <this repo> && cd canada-le-brave
 gnatprove -P check.gpr --level=2
 ```
 
-Expect **156 checks, 0 unproved**, of which **51 are functional contracts**.
+Expect **181 checks, 0 unproved**, of which **56 are functional contracts**.
 
-**What that buys, in plain terms.** The 51 functional contracts mean the stated
+**What that buys, in plain terms.** The 56 functional contracts mean the stated
 properties are proved — not tested on examples, but proved for every input
-satisfying the preconditions. The 66 run-time checks mean this source is proved
+satisfying the preconditions. The 77 run-time checks mean this source is proved
 free of integer overflow, division by zero, and range and index violations,
 within the SPARK subset and those preconditions, for **all** admissible inputs.
 In SPARK terms that is *absence of run-time errors*, and it is normally the
-expensive part. 39 termination checks discharge too. **Nothing is justified
+expensive part. 48 termination checks discharge too. **Nothing is justified
 away** — GNATprove allows unproved checks to be dismissed with a `pragma
 Annotate`; there are none in this repository. 0 unproved, 0 justified, 0
 suppressed.
@@ -74,8 +75,8 @@ suppressed.
 that asserts nothing. Judge on *contracts present AND discharged*, never on the
 total row — including here.
 
-**Counted:** this repository has **37 functions, of which 21 carry a `Post`.** All
-37 are expression functions, so for the other 16 the body is the definition and a
+**Counted:** this repository has **43 functions, of which 26 carry a `Post`.** All
+43 are expression functions, so for the other 17 the body is the definition and a
 postcondition restating it would prove only itself. The contracts that carry weight
 sit on the composite operations — the `Pack`/`Unpack` round trip, the telescoping
 conservation law, the METRo index map — with the decomposers visible in full
@@ -107,11 +108,22 @@ bit (`No_Overlap`), and every field fits the word whenever the whole layout does
 **withdrawn, not shipped.** It proved a real theorem — that shares formed as
 differences of running floor divisions sum to the total exactly — but that is not
 Banff's algorithm. `EI_Prorating.c` computes `v + v*k/weight` in floating point,
-rounds to one extra decimal, then applies Sigman–Wagner carry-forward rounding. A
-correct proof about the wrong algorithm, filed under a derived-work notice, is a
-worse claim than the one it replaced. **Statistics Canada's gensol-banff is
-therefore no longer represented here at all**, and the counts above fell
-accordingly: ten cores across five libraries became nine across four.
+rounds to one extra decimal, and only then applies Sigman–Wagner carry-forward
+rounding. A correct proof about the wrong algorithm, filed under a derived-work
+notice, is a worse claim than the one it replaced.
+
+Banff is instead represented by `Carry_Forward_Rounding_Pkg`, which models the
+step the original actually performs: the carry-forward rounding loop, in whole
+tenths, with no floating point. It proves that the reported total is the true
+total less exactly the carry, and that the carry is always one rounding's
+residual — so the reported total is never adrift of the true total by a whole
+rounding step, however many components there are. That is the guarantee
+carry-forward rounding exists to provide.
+
+⚠ **What it does not model is stated in [`gensol-banff/NOTICE`](gensol-banff/NOTICE)
+rather than left here to be found:** the prorating arithmetic before that loop —
+the floating-point `v + v*k/weight` and its rounding to one extra decimal — is not
+covered. This core is about the rounding step, not the share calculation.
 
 ⚠ **Four.** An earlier version of this section said the replacement cores dropped
 `No_Overlap` because it needed an induction we could not discharge. That was untrue
@@ -129,7 +141,7 @@ is discharged trivially. We would rather you heard all of that from us.
 
 ## Receipts
 
-⚠ **One of the nine has no receipt.** `Bit_Field_Packing_Pkg` was forged and proved
+⚠ **Two of the ten have no receipt.** `Bit_Field_Packing_Pkg` and `Carry_Forward_Rounding_Pkg` were forged and proved
 on 2026-09-08 to replace `Bufr_Af_Shifts_Pkg`. It is proved here; it is **not** yet
 independently re-proved and signed, because admission happens off this machine and
 had not run when this was written. Until a receipt for it appears in `receipts/`,
@@ -189,7 +201,7 @@ The GitHub address above stays the published one, because it is the address alre
 changing it later would be its own small dishonesty. The mirror exists so that the work does not
 depend on a single host, in a single country, staying willing to carry it.
 
-**You do not have to trust the host, and that is the point.** Eight of the nine cores have their SHA-256 bound into a
+**You do not have to trust the host, and that is the point.** Eight of the ten cores have their SHA-256 bound into a
 signed receipt in [`receipts/`](receipts/). Alter a file here and it stops matching its receipt, and
 the prover gives a different answer. A host — this one or any other — can remove this work; it
 cannot silently change it. That is the same argument this repository makes about software

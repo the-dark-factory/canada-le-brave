@@ -23,7 +23,8 @@ The pipeline that produced these files is:
 4. **GNATprove** — an ordinary, independent, publicly available prover, run
    locally — checked the result against the stated contracts.
 5. A **second machine we own**, of different architecture and toolchain,
-   re-ran the proof from the source alone and signed a receipt. See
+   re-ran the proof from the source alone and signed a receipt — for eight of the
+   nine; `bit_field_packing_pkg` is proved but not yet re-proved and signed. See
    `receipts/`.
 
 So: one human decision, two different AI systems at two different stages, and
@@ -72,13 +73,13 @@ than most hand-written code ever is:
 
 - **The stated properties are proved.** 50 functional contracts discharge. Not
   tested on examples — proved, for every input satisfying the preconditions.
-- **Absence of run-time errors is proved.** 73 run-time checks discharge. Within
+- **Absence of run-time errors is proved.** 66 run-time checks discharge. Within
   the SPARK subset and the stated preconditions, this source is proved free of
   integer overflow, division by zero, range and index violations, and aliasing
   faults — for **all** admissible inputs, not for the ones somebody thought to
   try. In SPARK terms this is AoRTE, and it is the property that ordinarily
   costs the most to obtain.
-- **Termination is proved** where it applies: 46 checks.
+- **Termination is proved** where it applies: 39 checks.
 - **Nothing is justified away.** GNATprove lets you dismiss an unproved check
   with a `pragma Annotate` justification. There are **none** here. 0 justified,
   0 unproved, 0 suppressed.
@@ -112,7 +113,7 @@ excluded, it was excluded.
   a `Storage_Error` stack overflow on Linux/x86-64. Reported upstream as
   AdaCore/spark2014 issue #69.
 
-  Neither that nor anything like it affects the ten cores published here — none
+  Neither that nor anything like it affects the nine cores published here — none
   uses the construct, and all ten discharge cleanly on the released toolchain,
   which you can confirm yourself. But a reader who assumes the trusted base is
   flawless should not.
@@ -185,7 +186,7 @@ model at all: **the proofs discharge, or they do not, and you can run them yours
 
 ## Known specifics
 
-- Three checks discharge under only one of the three back-end solvers. Run
+- Two checks discharge under only one of the three back-end solvers. Run
   `--prover=z3`, `--prover=cvc5` and `--prover=altergo` separately and you will
   find them.
 - The receipts are signed with an interim **software** key, not hardware. The

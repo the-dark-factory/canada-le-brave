@@ -16,7 +16,7 @@ subprograms, together with formal contracts stating properties the original
 relies on, machine-checked with GNATprove.
 
 Converted from : BUFR field-layout handling
-Cores          : bufr_af_shifts_pkg
+Cores          : bit_field_packing_pkg
 
 Copyright in the upstream work remains with its authors. This derived work is
 (c) 2026 The Dark Factory Ltd and is offered under the same licence as the

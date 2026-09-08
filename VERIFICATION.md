@@ -12,16 +12,16 @@ record.**
 ## Two different things you could check, and the second is the one we need
 
 ### 1. Reproducibility — cheap, and mostly already guaranteed
-Take the ten `.ads` files, put them in an empty directory with `check.gpr`, and run:
+Take the nine `.ads` files, put them in an empty directory with `check.gpr`, and run:
 
 ```
 gnatprove -P check.gpr --level=2
 ```
 
-Expect **169 checks, 0 unproved, 0 justified** — 50 functional contracts, 73 run-time checks,
-46 termination. Also worth doing: `--prover=z3`, `--prover=cvc5` and `--prover=altergo`
-separately, to confirm our own statement that this set is **not** 3/3 (Z3 alone 0 unproved,
-CVC5 alone 1, Alt-Ergo alone 3).
+Expect **156 checks, 0 unproved, 0 justified** — 51 functional contracts, 66 run-time checks,
+39 termination. Also worth doing: `--prover=z3`, `--prover=cvc5` and `--prover=altergo`
+separately, to confirm our own statement that this set is **not** 3/3 (Z3 alone 1 unproved,
+CVC5 alone 1, Alt-Ergo alone 2).
 
 This establishes that the machinery does what we say. It does **not** establish that any of it
 matters.

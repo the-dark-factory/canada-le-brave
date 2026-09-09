@@ -12,7 +12,7 @@ federal bodies.
 > the wrong algorithm under a Statistics Canada notice. An adversarial review caught
 > both before publication. An audit of all ten then found two MORE cores proving
 > nothing, and both had been signed by two machines. All corrections are kept below
-> rather than quietly removed. What began as ten cores across five libraries became eight across four; on 2026-09-08 two libraries were added, one of them the one that had left, and a second METRo core followed; a second Banff core was shipped for a few hours and withdrawn as a trick: eleven across six.
+> rather than quietly removed. What began as ten cores across five libraries became eight across four; on 2026-09-08 two libraries were added, one of them the one that had left, and a second METRo core followed; a second Banff core was shipped for a few hours and withdrawn as a trick, and a real second Banff core followed: twelve across six.
 >
 > Every number on this page was re-measured from these sources at this commit, on a
 > clean object directory, because a cached one overstated them by 40% during that
@@ -39,11 +39,11 @@ Now some has been. It is small, specific, and re-runnable by anyone.
 | [EGSnrc](https://github.com/nrc-cnrc/EGSnrc) | National Research Council | AGPL-3.0 | 6 |
 | [libECBUFR](https://github.com/ECCC-MSC/libecbufr) | Environment and Climate Change Canada | GPL-3.0 | 1 |
 | [METRo](https://framagit.org/metroprojects/metro) | Environment and Climate Change Canada | GPL-2.0 | 2 |
-| [gensol-banff](https://github.com/StatCan/gensol-banff) | Statistics Canada | GPL-3.0 | 1 |
+| [gensol-banff](https://github.com/StatCan/gensol-banff) | Statistics Canada | GPL-3.0 | 2 |
 | [crc-covlib](https://github.com/ic-crc/crc-covlib) | ISED / Communications Research Centre Canada | MIT | 1 |
 | [rebar](https://github.com/phac-nml/rebar) | Public Health Agency of Canada | Apache-2.0 | 1 |
 
-**Eleven cores. Six libraries. Five departments. 226 proof obligations, none unproved — 64 of them functional contracts; the rest are run-time and termination checks.**
+**Twelve cores. Six libraries. Five departments. 251 proof obligations, none unproved — 70 of them functional contracts; the rest are run-time and termination checks.**
 
 A **core** is not a rewrite. It is one small piece of the original — a function,
 or a tight cluster of them — re-expressed in SPARK Ada with the properties the
@@ -60,15 +60,15 @@ git clone <this repo> && cd canada-le-brave
 gnatprove -P check.gpr --level=2
 ```
 
-Expect **226 checks, 0 unproved**, of which **64 are functional contracts**.
+Expect **251 checks, 0 unproved**, of which **70 are functional contracts**.
 
-**What that buys, in plain terms.** The 64 functional contracts mean the stated
+**What that buys, in plain terms.** The 70 functional contracts mean the stated
 properties are proved — not tested on examples, but proved for every input
-satisfying the preconditions. The 103 run-time checks mean this source is proved
+satisfying the preconditions. The 114 run-time checks mean this source is proved
 free of integer overflow, division by zero, and range and index violations,
 within the SPARK subset and those preconditions, for **all** admissible inputs.
 In SPARK terms that is *absence of run-time errors*, and it is normally the
-expensive part. 59 termination checks discharge too. **Nothing is justified
+expensive part. 67 termination checks discharge too. **Nothing is justified
 away** — GNATprove allows unproved checks to be dismissed with a `pragma
 Annotate`; there are none in this repository. 0 unproved, 0 justified, 0
 suppressed.
@@ -177,7 +177,7 @@ figures above were measured from the current sources on a clean object directory
 a cached one inflated them by 40% once during this very correction.
 
 **Solver grade, stated exactly.** Run each back-end alone, from a clean session,
-and you get: **Z3 — 1 unproved; CVC5 — 5; Alt-Ergo — 7.** No single prover clears
+and you get: **Z3 — 1 unproved; CVC5 — 7; Alt-Ergo — 10.** No single prover clears
 everything, so the clean total depends on the three being used together. One check
 is discharged trivially. We would rather you heard all of that from us.
 
@@ -241,13 +241,33 @@ rather than examined. **A generic lemma under a library's notice is a trick even
 obligation is real**, and every mechanical gate passes it by construction. Withdrawn on that
 judgement; its NOTICE keeps the account.
 
+**`raking_adjustment_pkg` — gensol-banff, a second Banff core (2026-09-09).** The proportional
+step of `EI_RakingBasic` (`EI_Prorating.c:475-628`): each amount scaled by target over sum and
+rounded halves-up at the finer unit. Two theorems carry it: each adjusted amount is the nearest
+fine unit to its exact scaled value, and the adjusted amounts together stay within half a unit
+per component of the target — the slack the carry-forward step is built to close. Three further
+contracts (the group lands within N/2; scaling never reverses two amounts; exact scaling rounds
+to itself) are **corollaries** of those two and are graded so by the vacuity battery, not as
+theorems. Scope is stated in the NOTICE: unit weights, no non-proratable amounts, non-negative
+values, the sign-flip regime excluded.
+
+★ **A differential test against the C found a tie-rounding gap.** The core is the rule
+`UTIL_Round` implements, applied to the exact quotient; upstream applies the same rule to
+`v + v*k` in doubles. Over 193,600 inputs, at zero decimal places they disagree on 1,897 — every
+one an exact tie, and at every one upstream is one fine unit lower, because `k` is not always
+exactly representable. That is one in five of the exact ties in the box, and the proportion
+holds at one and two decimal places. No claim that any statistic was affected, or that this is a
+defect. ⚠ Our first measurement said 115; it came from a harness in the wrong units, and a
+reviewer caught it before this was pushed. Both the correction and the reason are in the NOTICE.
+It is the reason a proof of a re-expression needs an execution against the original beside it.
+
 The two surviving affected cores were re-forged through the same door with the withdrawn
 contracts removed, re-proved, and re-admitted from the shipped bytes; the third was withdrawn.
 The counts at the top of this page are the re-measured ones.
 
 ## Receipts
 
-**All eleven cores carry a receipt, and every receipt's hash matches the shipped source.** Two of
+**All twelve cores carry a receipt, and every receipt's hash matches the shipped source.** Two of
 the eight cores of the morning — `Bit_Field_Packing_Pkg` and `Carry_Forward_Rounding_Pkg` — had
 been published proved-here-only because admission had not run; they were admitted from the
 shipped bytes on the evening of 2026-09-08, together with the two new cores. Check:

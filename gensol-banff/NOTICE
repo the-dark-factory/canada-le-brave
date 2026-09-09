@@ -15,70 +15,121 @@ What is provided is a re-expression, in SPARK Ada, of the behaviour of specific
 subprograms, together with formal contracts stating properties the original
 relies on, machine-checked with GNATprove.
 
-Converted from : the Sigman-Wagner carry-forward ROUNDING loop of EI_Prorating.c
-                 (the second loop, after prorating). ⚠ SCOPE: the prorating
-                 arithmetic itself — v + v*k/weight in floating point, rounded to
-                 DecimalPlaces+1 — is NOT modelled. What is modelled is the
-                 rounding-to-report step, in whole tenths, with no floating point.
-                 Rounding matches UTIL_Round (STC_C_Libraries/CommonAPI/util.c:726)
-                 exactly: halves away from zero, verified over all 10011 values of
-                 the modelled domain.
-                 ⚠ FURTHER SCOPE. The C loop runs on doubles; this model is a
-                 faithful rendering of it for DecimalPlaces <= 1, where the
+Converted from : C/libraries/BanffAPI/EI_Prorating.c, EI_RakingBasic (lines
+                 475-628), read at the pinned commit — two steps of it:
+                 (1) the proportional step: k at line 554, then
+                     `ArrayValueOut[i] = UTIL_Round (v + v*k/w, DecimalPlaces + 1)`
+                     at lines 563-565                     -> raking_adjustment_pkg
+                 (2) the Sigman-Wagner carry-forward ROUNDING loop that follows,
+                     lines 575-586                        -> carry_forward_rounding_pkg
+                 UTIL_Round is STC_C_Libraries/CommonAPI/util.c ("halves away
+                 from zero").
+Cores          : raking_adjustment_pkg, carry_forward_rounding_pkg
+
+                 ⚠ CORRECTION 2026-09-09, kept rather than quietly made. For a
+                 few hours on 2026-09-09 this directory also shipped
+                 donor_limit_pkg (EI_Donor.c:7-32 and :52-68). It proved, was
+                 signed, and was withdrawn the same morning as a trick: its
+                 theorems said that rounding-up division is rounding-up
+                 division, nothing about donor imputation, and it was stable
+                 only because a subtype excluded the zero-donor case upstream
+                 leaves unguarded. The .ads was removed at commit 818fbf1, but
+                 this NOTICE went on naming it until the next commit — an edit
+                 that silently missed. Both are corrected here.
+
+                 ---- raking_adjustment_pkg ----------------------------------
+
+                 ⚠ SCOPE, narrower than upstream. Unit weights; no
+                 non-proratable amounts (SumNoProratableValues = 0, so k =
+                 (T - S)/S — which also keeps k >= -1, the regime in which the
+                 BASIC approach cannot flip a sign; the sign-flip regime that
+                 EI_RakingScaling exists for is outside this core); amounts
+                 non-negative and at least one (upstream marks a zero amount as
+                 not proratable, line 511); a single edit; the finer whole unit
+                 (one decimal beyond the reported precision), so the scaled
+                 value is V*T/S in exact integer arithmetic and "halves away
+                 from zero" for non-negative values is (2*V*T + S) / (2*S). The
+                 ratio-bounds check (lines 588-604), the guard that the target
+                 lands on the reported precision (UTIL_Decimal, lines 543-547 —
+                 in fine units, T a multiple of 10) and the flag bookkeeping
+                 are NOT modelled. Amounts 1..100, targets 0..1000, at most 8
+                 components, so every product in a contract stays in range.
+                 The recursion index N and the subtypes of V, T and S are
+                 load-bearing for the range checks; nothing here says what
+                 upstream does outside those ranges.
+
+                 ⚠ WHAT THE DIFFERENTIAL TEST FOUND — a tie-rounding gap between
+                 the exact rule and the implementation, stated here as scope.
+                 The core is UTIL_Round's rule ("halves away from zero")
+                 applied to the exact quotient V*T/S. Upstream applies the same
+                 rule to v + v*k computed in doubles, k = (T - S)/S. Over every
+                 V in 1..40, T in 0..120, S in 1..40 (193,600 inputs, 9,509 of
+                 them exact ties) a verbatim harness of upstream's step, in
+                 real units, disagrees with the core on 1,897 inputs at zero
+                 decimal places (2,143 at one, 1,988 at two) — every one an
+                 exact tie, and at every one upstream is lower by one fine
+                 unit, because when k is not exactly representable the value
+                 lands a hair under the half. Restricted to targets on the
+                 reported precision, which is what upstream accepts: 190 of 857
+                 ties at zero places. No claim that any statistic was affected,
+                 that this is a defect, or that a documented tie rule exists
+                 that upstream departs from — none was found. The carry step
+                 that follows equals the fine total exactly only when that
+                 total lands on the reported precision (Balance_Is_Preserved's
+                 precondition); a tie shifted by one fine unit changes the fine
+                 total by one, so the reported group total can differ by one
+                 reported unit between the exact rule and upstream, and which
+                 component absorbs it can differ. See the finding of 2026-09-09
+                 in our records; its first version (115 disagreements) came
+                 from a harness in the wrong units and was corrected the same
+                 morning.
+
+                 WHAT IS PROVED, graded by the vacuity battery. Two theorems
+                 carry the content: Adjusted is the nearest fine unit to V*T/S,
+                 halves up (a division characterisation, both bounds); and
+                 Adjusted_Sum keeps the adjusted amounts together within half a
+                 unit per component of T times the total, inductively on the
+                 recursion (its other conjunct, the bound 100000 * N, is the
+                 accumulation bound the recursion needs and restates a subtype).
+                 The three predicates are COROLLARIES of those two contracts —
+                 each still proves with the bodies of the functions it names
+                 hidden — and are graded so, not as theorems: Lands_Within_Half_Each
+                 (with the amounts' own total as divisor the group lands within
+                 N/2 of the target, the slack the carry step is built to close),
+                 Order_Preserved (scaling never reverses two amounts), and
+                 Exact_When_Divisible (when S divides V*T rounding changes
+                 nothing). They are stated for the reader, and they say what
+                 the two theorems already imply. Total_Of is a bounded
+                 definition.
+
+                 Solver grade, on this file as shipped, at --level=2 with one
+                 prover process (-j1): Z3 alone discharges everything; CVC5
+                 alone leaves 2 (33:28, 58:19); Alt-Ergo alone leaves 3
+                 (43:19, 51:19, 58:19).
+
+                 ---- carry_forward_rounding_pkg -----------------------------
+
+                 ⚠ SCOPE: the rounding-to-report step, in whole tenths, with no
+                 floating point. Rounding matches UTIL_Round exactly: halves
+                 away from zero, verified over all 10,011 values of the
+                 modelled domain by differential execution against a verbatim
+                 harness (2026-09-09). The C loop runs on doubles; this model is
+                 a faithful rendering of it for DecimalPlaces <= 1, where the
                  tenths are exactly representable. At 2 or more places the
                  double arithmetic and the integer model can disagree. The C
                  also admits negative prorated values into the loop; amounts
                  here are non-negative.
-                 AND C/libraries/BanffAPI/EI_Donor.c:7-32 (EI_CalculateDonorLimit)
-                 and :52-68 (EI_EnoughDonors), read at the pinned commit
-                 (donor_limit_pkg).
-Cores          : carry_forward_rounding_pkg, donor_limit_pkg
 
-                 ⚠ CORRECTED 2026-09-09. The first version of donor_limit_pkg
-                 gave Enough_Donors a postcondition that an adversarial review
-                 the same night showed was discharged by half of its own body —
-                 the percent test, which is the whole content of upstream's
-                 EIM_DBL_LT comparison, played no part. That postcondition is
-                 WITHDRAWN; Enough_Donors is now a definition with no contract.
-                 The first NOTICE also gave the wrong path and wrong line ranges
-                 (corrected above) and called More_Respondents_Never_Hurt
-                 weight-bearing when it follows from the Percent subtype's
-                 upper bound of 100. Kept here rather than quietly made.
-
-                 ⚠ SCOPE of donor_limit_pkg, narrower than upstream, and two
-                 subtypes that do real work, declared:
-                 · D : Positive_Count. Upstream divides by NumberOfDonors
-                   unguarded (line 25); at zero donors that is a division by
-                   zero cast to int — undefined behaviour. This core makes zero
-                   donors unrepresentable. It does NOT prove anything about that
-                   case; it excludes it, and says so here.
-                 · N : Positive_Count. Donor_Limit's bound of at least one
-                   depends on it. Upstream validates NLimit >= 1 before use
-                   (procedures/DonorImputation/donorimp.c:3965), so the subtype
-                   is faithful, but the theorem rests on that validation.
-                 · Mrl is held in hundredths and the share in whole percent;
-                   upstream uses doubles, ceil(), and a tolerance comparison
-                   that this core replaces with exact integer comparison. The
-                   "unset" sentinel -1 is a Boolean flag. INT_MAX is the
-                   subtype's last value. Counts are capped at 30000 so every
-                   product in a contract stays in range.
-                   EI_CountDonorsReachedDonorLimit is not modelled.
-
-                 WHAT IS PROVED, graded. The two ceiling characterisations
-                 carry the weight: the rounded-up ratio is exactly the least
-                 count whose multiple by the donors reaches the recipients, and
-                 likewise the scaled ceiling against one hundred. Then:
-                 Donor_Limit is at least one, at least the fixed count when set,
-                 and at least the scaled ceiling when a multiplier is set (these
-                 follow from Integer'Max); when a multiplier of at least 1.00 IS
-                 set, composing the last of those with Limit_Covers_Recipients
-                 gives a limit of at least the rounded-up ratio, so the donors
-                 together can cover every recipient at that cap — this holds only
-                 when Has_M is true; and More_Respondents_Never_Hurt, which is
-                 true because a share can never exceed one hundred percent.
-
-                 Solver grade, on this file as shipped: Z3 alone and CVC5 alone
-                 discharge everything; Alt-Ergo alone leaves 1 (45:19).
+                 WHAT IS PROVED, graded by the vacuity battery (2026-09-09):
+                 Plain_Total, Reported_Total and Balance_Is_Preserved are
+                 theorems — the reported total is the true total less exactly
+                 the carry, and when the true total lands on the reported
+                 precision the reported total equals it. Rounded's
+                 postcondition (a multiple of ten) and the postconditions of
+                 Residual and Carry_After (each within -5 .. 5) are their result
+                 subtypes restated: they prove of an arbitrary result and are
+                 graded run-time-only, not theorems. They were written as
+                 bounds; by the grade they are not claims.
 
 Copyright in the upstream work remains with its authors. This derived work is
 (c) 2026 The Dark Factory Ltd and is offered under the same licence as the

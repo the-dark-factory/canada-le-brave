@@ -18,48 +18,60 @@ What is provided is a re-expression, in SPARK Ada, of the behaviour of specific
 subprograms, together with formal contracts stating properties the original
 relies on, machine-checked with GNATprove.
 
-Converted from : src/AntennaPattern.cpp:64-108 (GetHPatternGain) and
-                 src/AntennaPattern.cpp:553-565 (pGainInterpolation, the dB
-                 branch), read at the pinned commit — the horizontal antenna
-                 pattern lookup: find the two table entries bracketing the
-                 asked-for azimuth, read the gain off the straight line between
-                 them, and treat last-to-first as a segment by moving one
-                 endpoint a full turn.
+Converted from : src/AntennaPattern.cpp:553-565 (pGainInterpolation, the dB
+                 branch), as called from GetHPatternGain at :64-108, read at
+                 the pinned commit — reading the gain off the straight line
+                 between two neighbouring entries of the horizontal antenna
+                 pattern.
 Cores          : antenna_pattern_gain_pkg
 
+                 ⚠ CORRECTED 2026-09-09. The first version of this core carried
+                 two further contracts, Wrap_Below_Catches and
+                 Wrap_Above_Catches, and this NOTICE said they proved the
+                 fall-through `return 0` at line 107 unreachable. An adversarial
+                 review the same night showed both were collapsing proofs: one
+                 postcondition restated its own precondition, and both were true
+                 from the azimuth subtype alone. Worse, the unreachability
+                 claim rested on the table search (lines 82-91), which this core
+                 does not model, and upstream's else-branch guard is against the
+                 LAST entry, not the first. Both contracts are WITHDRAWN and the
+                 claim is struck. The first version also said the gain bound
+                 came from a header comment; no such comment exists. Both
+                 corrections are kept here rather than quietly made.
+
                  ⚠ SCOPE, narrower than upstream, and a re-expression.
-                 · Upstream works in doubles and divides before it multiplies
-                   (gain1 + (angle-angle1)*((gain2-gain1)/(angle2-angle1))).
-                   This core works in whole tenths of a degree and tenths of a
-                   decibel, multiplies before it divides, and truncates toward
-                   zero. The two agree only in exact arithmetic. The theorems
-                   are about the whole-unit re-expression.
-                 · The linear-power interpolation branch (linearGainInterpolation
-                   true, via pdBtoLinear/pLinearTodB) is NOT modelled.
-                 · The search over the sorted table (lines 82-91) is NOT
-                   modelled. The wrap theorems take only the first and last
-                   azimuths as given, with First <= Last as the sortedness
-                   they rely on.
-                 · Tables of zero or one entry (lines 70-74) are not modelled.
-                 · Gains are bounded to -100.0 .. +100.0 dB; azimuths to
-                   0.0 .. 359.9 degrees, as the header comment states.
+                 · Whole tenths of a degree and tenths of a decibel. Upstream
+                   works in doubles.
+                 · Upstream divides before it multiplies; this core multiplies
+                   first and truncates toward zero. The band theorem also holds
+                   with upstream's order in whole units, so this is a statement
+                   of what was proved, not a load-bearing difference.
+                 · Bounds are OURS: gains -100.0 .. +100.0 dB (upstream has no
+                   stated bound); azimuths -360.0 .. +719.9 as the extended
+                   range after the wrap adjustment. Upstream's header states
+                   entry azimuths as 0 to 359.99; this core's tenths cannot
+                   represent the last hundredth of that.
+                 · The precondition A1 < A2 excludes upstream's `angle2-angle1
+                   == 0` branch (line 555), which returns gain1 for duplicate
+                   azimuths. Duplicates are not rejected upstream
+                   (AddHPatternEntry sorts by azimuth only). That branch is not
+                   modelled.
+                 · The linear-power branch (linearGainInterpolation true), the
+                   table search, the wrap of the compass, and tables of zero or
+                   one entry are NOT modelled.
 
-                 GRADING THE FIVE CONTRACTS HONESTLY, so nobody has to.
-                 · Interpolated_Gain's band (the result never leaves the band
-                   between the two neighbouring gains) and Ends_At_Second (the
-                   interpolation returns exactly the second entry's gain at its
-                   own azimuth, which needs (D*X)/D = X of integer division)
-                   carry the weight. Two of three solvers alone cannot
-                   discharge them; see below.
-                 · Starts_At_First is immediate — the offset is zero.
-                 · Wrap_Below_Catches and Wrap_Above_Catches follow from the
-                   azimuth domain alone. Their value is what they say about the
-                   code, not their difficulty: the fall-through `return 0` at
-                   line 107 is unreachable for a table of two or more entries.
+                 WHAT IS PROVED, graded. The band theorem — the interpolated
+                 gain never leaves the band between the two neighbouring gains
+                 — and Ends_At_Second — the interpolation returns exactly the
+                 second entry's gain at its own azimuth, which needs (D*X)/D = X
+                 of integer division — carry the weight; two of three solvers
+                 alone cannot discharge them. Starts_At_First is immediate: the
+                 offset is zero.
 
-                 Solver grade: Z3 alone discharges all 14 checks. CVC5 alone
-                 and Alt-Ergo alone each leave 3 — the lower band bound (11:19),
-                 the result range check (17:10) and Ends_At_Second (34:19).
+                 Solver grade, on this file as shipped: Z3 alone discharges
+                 everything. CVC5 alone and Alt-Ergo alone each leave 3 — the
+                 lower band bound (12:19), the result range check (18:10) and
+                 Ends_At_Second (35:19).
 
 Copyright in the upstream work remains with its authors. This derived work is
 (c) 2026 The Dark Factory Ltd and is offered under the same licence as the

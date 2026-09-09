@@ -43,7 +43,7 @@ Now some has been. It is small, specific, and re-runnable by anyone.
 | [crc-covlib](https://github.com/ic-crc/crc-covlib) | ISED / Communications Research Centre Canada | MIT | 1 |
 | [rebar](https://github.com/phac-nml/rebar) | Public Health Agency of Canada | Apache-2.0 | 1 |
 
-**Twelve cores. Six libraries. Five departments. 257 proof obligations, none unproved.**
+**Twelve cores. Six libraries. Five departments. 245 proof obligations, none unproved — 72 of them functional contracts; the rest are run-time and termination checks.**
 
 A **core** is not a rewrite. It is one small piece of the original — a function,
 or a tight cluster of them — re-expressed in SPARK Ada with the properties the
@@ -60,15 +60,15 @@ git clone <this repo> && cd canada-le-brave
 gnatprove -P check.gpr --level=2
 ```
 
-Expect **257 checks, 0 unproved**, of which **78 are functional contracts**.
+Expect **245 checks, 0 unproved**, of which **72 are functional contracts**.
 
-**What that buys, in plain terms.** The 78 functional contracts mean the stated
+**What that buys, in plain terms.** The 72 functional contracts mean the stated
 properties are proved — not tested on examples, but proved for every input
-satisfying the preconditions. The 110 run-time checks mean this source is proved
+satisfying the preconditions. The 108 run-time checks mean this source is proved
 free of integer overflow, division by zero, and range and index violations,
 within the SPARK subset and those preconditions, for **all** admissible inputs.
 In SPARK terms that is *absence of run-time errors*, and it is normally the
-expensive part. 69 termination checks discharge too. **Nothing is justified
+expensive part. 65 termination checks discharge too. **Nothing is justified
 away** — GNATprove allows unproved checks to be dismissed with a `pragma
 Annotate`; there are none in this repository. 0 unproved, 0 justified, 0
 suppressed.
@@ -177,61 +177,67 @@ figures above were measured from the current sources on a clean object directory
 a cached one inflated them by 40% once during this very correction.
 
 **Solver grade, stated exactly.** Run each back-end alone, from a clean session,
-and you get: **Z3 — 2 unproved; CVC5 — 5; Alt-Ergo — 10.** No single prover clears
+and you get: **Z3 — 1 unproved; CVC5 — 5; Alt-Ergo — 8.** No single prover clears
 everything, so the clean total depends on the three being used together. One check
 is discharged trivially. We would rather you heard all of that from us.
 
-## 2026-09-08, later — two libraries added, one of them the one that had left
+## 2026-09-08/09 — four cores added, then an adversarial pass took a third of their contracts back out
 
-Forged the same evening, through the same door, by the same local model, and both
-re-proved and signed by the second machine before this was written.
+Four cores were forged on the evening of the 8th and the morning of the 9th, through the same
+door, by the same local model, each re-proved and signed by the second machine — and pushed on
+the strength of our own collapsing-proof check. An adversarial review by a frontier model, run
+afterwards on all four, found that check had not been enough. What it found is kept here.
 
-**`antenna_pattern_gain_pkg` — crc-covlib, ISED / Communications Research Centre
-Canada.** The horizontal antenna-pattern lookup (`AntennaPattern.cpp:64-108`): find
-the two table entries around the asked-for azimuth and read the gain off the line
-between them, wrapping last-to-first. Since this is the library that left over a
-collapsing proof, the NOTICE grades its own five contracts: the **band theorem** (the
-answer never leaves the band between the two neighbouring gains) and **exactness at the
-second endpoint** (which needs `(D*X)/D = X` of integer division) carry the weight, and
-two of the three solvers alone cannot discharge them. Exactness at the first endpoint is
-immediate. The two wrap theorems follow from the azimuth domain alone — their content is
-that the fall-through `return 0` on line 107 is unreachable for a table of two or more
-entries, not that they were hard.
+**`antenna_pattern_gain_pkg` — crc-covlib, ISED / Communications Research Centre Canada.** The
+horizontal antenna-pattern interpolation (`AntennaPattern.cpp:553-565`, as called from
+`:64-108`). Kept: the **band theorem** (the answer never leaves the band between the two
+neighbouring gains) and **exactness at the second endpoint**, which needs `(D*X)/D = X` of
+integer division; two of the three solvers alone cannot discharge them. Exactness at the first
+endpoint is immediate. **Withdrawn:** two wrap-segment contracts. One postcondition restated its
+precondition; both were true from the azimuth subtype alone; and the claim we hung on them —
+that the fall-through `return 0` is unreachable — depended on the table search this core does
+not model, and misread which entry upstream's guard compares against. The NOTICE also cited a
+header comment for the gain bound that does not exist. Both corrected in the NOTICE.
 
 **`parsimony_score_pkg` — rebar, Public Health Agency of Canada (National Microbiology
-Laboratory).** A fifth department. The parsimony summary between a sample and a
-population (`parsimony.rs:30-78`): substitutions in both are support, in one only are
-conflicts, and the score is support less both. The theorems are the partitions —
-conflict count equals list length less support, from either side — and the bounds on
-the score that follow. ⚠ Upstream's last commit is 2024-01-02.
+Laboratory).** A fifth department. The parsimony summary between a sample and a population
+(`parsimony.rs:30-78`). The Ada was and is correct: four genuine inductions, including the two
+partitions (each conflict count equals its list's length less the support). **Corrected:** the
+first NOTICE and this README had *sample* and *population* swapped in every sentence that named
+a list — including the paragraph below. ⚠ Upstream's last commit is 2024-01-02.
 
-★ **What the prover refused, kept on the record.** The first prose for the parsimony
-core claimed the score never exceeds the *sample* list's length as well as the
-population's. GNATprove would not discharge it, and it is false: a population list
-holding one key three times against a sample holding it once scores 3 against a length
-of 1. Upstream cannot hit this — its lists hold one substitution per coordinate — but
-the core does not assume distinctness, so it does not claim the bound. It was withdrawn
-from the claim rather than added as an assumption. That is what a prover is for.
+★ **What the prover refused, kept on the record — and now stated the right way round.** The
+first prose for the parsimony core claimed the score never exceeds the *population* list's length
+as well as the *sample*'s. GNATprove would not discharge it, and it is false: a sample list
+holding one key three times against a population holding it once scores 3 against a population
+length of 1. Upstream cannot hit this — its lists hold one substitution per coordinate — but the
+core does not assume distinctness, so it does not claim the bound. It was withdrawn from the
+claim rather than added as an assumption. That is what a prover is for. We then told that story
+with the two lists' names transposed, and a reviewer caught it; the correction is here rather
+than quietly made.
 
-Both NOTICEs state scope: whole-unit models, multiply-before-divide where upstream
-divides first in doubles, the table search and the coordinate filtering not modelled.
+**`road_grid_levels_pkg` — METRo, a second core.** The flat-grid branch of `grille.f:161-177`.
+**Kept, and strengthened:** the two level counts the model reads off — levels within the
+structure depth, levels at or above the buried sensor — are each exactly the largest level whose
+depth does not exceed the depth asked about; the shipped version had a top-level escape clause
+the prover turns out not to need, so it is gone. **Withdrawn:** four contracts. A midpoint
+contract reduced to `X = X` — the prover reported both arguments unused, which is the clearest
+collapse in this repository's history and it was signed by two machines. An interleaving
+contract reduced to `2J-2 < 2J-1 < 2J`. Two depth functions carried postconditions that restated
+a subtype. The first NOTICE also cited lines about fifty off; corrected.
 
-**`road_grid_levels_pkg` — METRo, a second core (2026-09-09).** The flat-grid branch of
-`grille.f:107-116`: flux levels at whole steps, temperature levels at half steps. Proved: each
-temperature level lies strictly between its two flux levels and is exactly their midpoint, and
-the two level counts the model reads off — levels within the structure depth, levels at or above
-the buried sensor — are each the largest level whose depth does not exceed the depth asked
-about. The count theorems are integer-division facts and carry the weight. Only the flat grid is
-modelled; the exponential grid is not. Proved on the first round.
+**`donor_limit_pkg` — gensol-banff, a second core.** The donor-imputation cap in
+`EI_Donor.c:7-32` and the enough-donors gate at `:52-68`. **Kept:** the two ceiling
+characterisations (the rounded-up ratio is exactly the least count whose multiple by the donors
+reaches the recipients); the limit's lower bounds; and, when a multiplier of at least 1.00 is set,
+that the limit reaches that ratio so every recipient can be served under the cap. **Withdrawn:**
+the enough-donors postcondition, which half of its own body discharged. **Declared:** two subtypes
+that do real work — zero donors is made unrepresentable where upstream would divide by zero, and
+the fixed count's lower bound of one rests on upstream's own validation. The NOTICE says so.
 
-**`donor_limit_pkg` — gensol-banff, a second core (2026-09-09).** The donor-imputation cap in
-`EI_Donor.c:5-27` and the enough-donors gate at `:48-60`. Proved: the rounded-up ratio of
-recipients to donors is exactly the least count whose multiple by the donors reaches the
-recipients; the limit is at least one, at least the fixed count when set, and when the multiplier
-is at least 1.00 it is at least that ratio, so the donors together can cover every recipient
-without any donor exceeding the cap; and one more non-recipient respondent can never turn "enough
-donors" into "not enough". Whole units where upstream uses doubles, `ceil()` and a tolerance
-compare; the NOTICE says so. Proved on the first round.
+All three affected cores were re-forged through the same door with the withdrawn contracts
+removed, re-proved, and re-admitted from the shipped bytes. The counts at the top of this page
+are the re-measured ones.
 
 ## Receipts
 

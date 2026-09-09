@@ -70,9 +70,9 @@ It would be as dishonest to undersell this as to oversell it. Machine-generated
 code that nobody checked would be worthless. This is checked, and checked harder
 than most hand-written code ever is:
 
-- **The stated properties are proved.** 78 functional contracts discharge. Not
+- **The stated properties are proved.** 72 functional contracts discharge. Not
   tested on examples — proved, for every input satisfying the preconditions.
-- **Absence of run-time errors is proved.** 110 run-time checks discharge. Within
+- **Absence of run-time errors is proved.** 108 run-time checks discharge. Within
   the SPARK subset and the stated preconditions, this source is proved free of
   integer overflow, division by zero, range and index violations, and aliasing
   faults — for **all** admissible inputs, not for the ones somebody thought to

@@ -16,32 +16,50 @@ subprograms, together with formal contracts stating properties the original
 relies on, machine-checked with GNATprove.
 
 Converted from : src/model/array2matrix.f (metro_index_map_pkg) and
-                 src/model/grille.f:107-116 (GRILLE, the FLAT branch:
+                 src/model/grille.f:161-177 (GRILLE, the FLAT branch:
                  dpFluxDepth(j) = j*DY, dpTemperatureDepth(j) = (j-0.5)*DY,
-                 iref = int(ZONES(NZONE)/DY), ir40 = last j with
+                 iref = int(ZONES(NZONE)/DY), ir40 = the last j with
                  dpTemperatureDepth(j) <= dSstDepth), read at the pinned commit
                  (road_grid_levels_pkg).
 Cores          : metro_index_map_pkg, road_grid_levels_pkg
+
+                 ⚠ CORRECTED 2026-09-09. The first version of
+                 road_grid_levels_pkg carried six contracts. An adversarial
+                 review the same night found four of them empty: Is_Midpoint
+                 reduced to X = X (the prover reported both arguments unused);
+                 Interleaved reduced to 2J-2 < 2J-1 < 2J; Flux_Depth and
+                 Temperature_Depth carried postconditions that merely restated
+                 the half-step's subtype. All four are WITHDRAWN. The two
+                 count theorems that remain were also STRENGTHENED: the shipped
+                 version had an escape clause at the top level ("or the result
+                 is 200") that the prose did not mention; the prover discharges
+                 the full maximality without it, so the clause is gone. The
+                 first NOTICE also cited grille.f lines that were roughly fifty
+                 lines off; corrected above. Kept here rather than quietly made.
 
                  ⚠ SCOPE of road_grid_levels_pkg, narrower than upstream. Depths
                  are whole half-steps so the half-step offset is exact; upstream
                  uses REAL arithmetic and DY = max(0.01, ZONES(NZONE)/n). Only
                  the FLAT grid is modelled — the exponential grid of the ELSE
-                 branch (lines 117-137) is not. The material-property
-                 interpolation that follows (lines 139-170) is not modelled.
-                 Upstream bounds ir40 by iref as well; this core characterises
-                 each count on its own. Levels are capped at 200 and the
-                 half-step at 1000 units.
+                 branch (lines 178-208) is not, nor the material-property
+                 interpolation that follows (lines 210-243). Upstream bounds
+                 ir40 by iref as well; this core characterises each count on
+                 its own. Upstream never initialises ir40 when no level lies at
+                 or above the sensor; this core returns 0 there, which is a
+                 choice, not a re-expression. Levels are capped at 200 and the
+                 half-step at 1000 units. Flux_Depth and Temperature_Depth are
+                 definitions with no contract.
 
-                 What is proved: each temperature level lies strictly between
-                 the flux level above and the flux level below it, and is
-                 exactly their midpoint; the level count within the structure
-                 depth is the largest level whose flux depth does not exceed it;
-                 the count at or above the sensor is the largest level whose
-                 temperature depth does not exceed it. The two count theorems
-                 are about integer division and are the ones that carry weight;
-                 the midpoint and interleaving follow from the layout by
-                 arithmetic on bounded operands.
+                 WHAT IS PROVED: the level count within the structure depth is
+                 exactly the largest level whose flux depth does not exceed it
+                 (its own depth fits, the next does not); the count at or above
+                 the sensor is exactly the largest level whose temperature depth
+                 does not exceed it, or zero. Both are facts about integer
+                 division against the two depth formulas.
+
+                 Solver grade, on this file as shipped: Z3 alone discharges
+                 everything; CVC5 alone leaves 1 (29:28); Alt-Ergo alone
+                 leaves 2 (23:09, 32:19).
 
 Copyright in the upstream work remains with its authors. This derived work is
 (c) 2026 The Dark Factory Ltd and is offered under the same licence as the

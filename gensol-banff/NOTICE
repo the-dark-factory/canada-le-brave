@@ -29,30 +29,56 @@ Converted from : the Sigman-Wagner carry-forward ROUNDING loop of EI_Prorating.c
                  double arithmetic and the integer model can disagree. The C
                  also admits negative prorated values into the loop; amounts
                  here are non-negative.
-                 AND libraries/BanffAPI/EI_Donor.c:5-27 (EI_CalculateDonorLimit) and
-                 :48-60 (EI_EnoughDonors), read at the pinned commit
+                 AND C/libraries/BanffAPI/EI_Donor.c:7-32 (EI_CalculateDonorLimit)
+                 and :52-68 (EI_EnoughDonors), read at the pinned commit
                  (donor_limit_pkg).
 Cores          : carry_forward_rounding_pkg, donor_limit_pkg
 
-                 ⚠ SCOPE of donor_limit_pkg, narrower than upstream. The multiplier
-                 Mrl is held in hundredths and the share in whole percent; upstream
-                 uses doubles, ceil(), and a tolerance comparison (EIM_DBL_LT) that
-                 this core replaces with exact integer comparison. The "unset"
-                 sentinel -1 is modelled as a Boolean flag. INT_MAX becomes the
-                 subtype's last value. Counts are capped at 30000 so every product
-                 in a contract stays in range. EI_CountDonorsReachedDonorLimit is
-                 not modelled.
+                 ⚠ CORRECTED 2026-09-09. The first version of donor_limit_pkg
+                 gave Enough_Donors a postcondition that an adversarial review
+                 the same night showed was discharged by half of its own body —
+                 the percent test, which is the whole content of upstream's
+                 EIM_DBL_LT comparison, played no part. That postcondition is
+                 WITHDRAWN; Enough_Donors is now a definition with no contract.
+                 The first NOTICE also gave the wrong path and wrong line ranges
+                 (corrected above) and called More_Respondents_Never_Hurt
+                 weight-bearing when it follows from the Percent subtype's
+                 upper bound of 100. Kept here rather than quietly made.
 
-                 What is proved: the rounded-up ratio is exactly the least count
-                 whose multiple by the donors reaches the recipients (and likewise
-                 for the scaled ceiling); the limit is at least one, at least the
-                 fixed count when set, and at least the scaled ceiling when a
-                 multiplier is set; when the multiplier is at least 1.00 the limit
-                 is at least the rounded-up ratio, so the donors together cover
-                 every recipient; and one more non-recipient respondent never
-                 turns "enough donors" into "not enough". The two ceiling
-                 characterisations and the monotonicity theorem carry the weight;
-                 Donor_Limit's own bounds follow from Integer'Max.
+                 ⚠ SCOPE of donor_limit_pkg, narrower than upstream, and two
+                 subtypes that do real work, declared:
+                 · D : Positive_Count. Upstream divides by NumberOfDonors
+                   unguarded (line 25); at zero donors that is a division by
+                   zero cast to int — undefined behaviour. This core makes zero
+                   donors unrepresentable. It does NOT prove anything about that
+                   case; it excludes it, and says so here.
+                 · N : Positive_Count. Donor_Limit's bound of at least one
+                   depends on it. Upstream validates NLimit >= 1 before use
+                   (procedures/DonorImputation/donorimp.c:3965), so the subtype
+                   is faithful, but the theorem rests on that validation.
+                 · Mrl is held in hundredths and the share in whole percent;
+                   upstream uses doubles, ceil(), and a tolerance comparison
+                   that this core replaces with exact integer comparison. The
+                   "unset" sentinel -1 is a Boolean flag. INT_MAX is the
+                   subtype's last value. Counts are capped at 30000 so every
+                   product in a contract stays in range.
+                   EI_CountDonorsReachedDonorLimit is not modelled.
+
+                 WHAT IS PROVED, graded. The two ceiling characterisations
+                 carry the weight: the rounded-up ratio is exactly the least
+                 count whose multiple by the donors reaches the recipients, and
+                 likewise the scaled ceiling against one hundred. Then:
+                 Donor_Limit is at least one, at least the fixed count when set,
+                 and at least the scaled ceiling when a multiplier is set (these
+                 follow from Integer'Max); when a multiplier of at least 1.00 IS
+                 set, composing the last of those with Limit_Covers_Recipients
+                 gives a limit of at least the rounded-up ratio, so the donors
+                 together can cover every recipient at that cap — this holds only
+                 when Has_M is true; and More_Respondents_Never_Hurt, which is
+                 true because a share can never exceed one hundred percent.
+
+                 Solver grade, on this file as shipped: Z3 alone and CVC5 alone
+                 discharge everything; Alt-Ergo alone leaves 1 (45:19).
 
 Copyright in the upstream work remains with its authors. This derived work is
 (c) 2026 The Dark Factory Ltd and is offered under the same licence as the

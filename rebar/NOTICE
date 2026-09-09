@@ -20,11 +20,21 @@ subprograms, together with formal contracts stating properties the original
 relies on, machine-checked with GNATprove.
 
 Converted from : src/sequence/parsimony.rs:30-78 (Summary::from_sequence), read
-                 at the pinned commit — the parsimony summary between a sample
-                 and a population: substitutions in both are SUPPORT, those in
-                 the population only are CONFLICT_ALT, those in the sample only
-                 are CONFLICT_REF, and the score is support less both conflicts.
-Cores          : parsimony_score_pkg
+                 at the pinned commit. Its first argument is the SAMPLE being
+                 classified and its second the POPULATION it is compared with
+                 (callers: src/dataset/mod.rs:216 and :292). Substitutions in
+                 both are SUPPORT; substitutions in the sample only are
+                 CONFLICT_ALT; substitutions in the population only are
+                 CONFLICT_REF; the score is support less both conflicts.
+Cores          : parsimony_score_pkg — S is the sample list, Q the population.
+
+                 ⚠ CORRECTED 2026-09-09. The first version of this NOTICE, and
+                 the README paragraph about it, had SAMPLE and POPULATION the
+                 wrong way round in every sentence that named a list. The Ada
+                 was right throughout: Conflict_Alt counts S-entries missing
+                 from Q, matching upstream with S the sample. The prose was
+                 wrong. An adversarial review caught it the same night; the
+                 correction is kept here rather than quietly made.
 
                  ⚠ SCOPE, narrower than upstream.
                  · A substitution is one whole-number key. Upstream compares
@@ -37,25 +47,26 @@ Cores          : parsimony_score_pkg
                    The core takes the two lists as already filtered.
 
                  WHAT THE PROVER REFUSED, kept on the record. The first claim
-                 written for Score also said it never exceeds the SAMPLE list's
-                 length. GNATprove could not discharge it, and it is false: if
-                 the population list holds one key three times and the sample
-                 holds it once, support is 3 and the score is 3, above the
-                 sample's length of 1. Upstream's lists are duplicate-free by
-                 construction (one substitution per genome coordinate), so the
-                 bound holds there — but this core does not assume distinctness,
-                 so it does not claim the bound. It was withdrawn from the
-                 claim, not added as an assumption.
+                 written for Score also said it never exceeds the POPULATION
+                 list's length (NQ). GNATprove could not discharge it, and it is
+                 false: if the sample list holds one key three times and the
+                 population holds it once, support is 3 and the score is 3,
+                 above the population's length of 1. Upstream's lists are
+                 duplicate-free by construction (one substitution per genome
+                 coordinate), so the bound holds there — but this core does not
+                 assume distinctness, so it does not claim the bound. It was
+                 withdrawn from the claim, not added as an assumption.
 
-                 What IS proved: membership agrees with the quantified
-                 statement; support never exceeds the population's length;
-                 support and conflict_alt partition the population list exactly
-                 (conflict_alt = length - support), and conflict_ref partitions
-                 the sample list the same way from the other side; the score
-                 never exceeds the support, never exceeds the population list's
-                 length, and never falls below minus the two lengths together;
-                 and when each list is wholly contained in the other, the score
-                 is exactly the population list's length.
+                 WHAT IS PROVED, graded. The four inductions carry the weight:
+                 membership agrees with the quantified statement; support never
+                 exceeds the sample's length; conflict_alt = |S| - support and
+                 conflict_ref = |Q| - support(Q against S) — the two partitions,
+                 each proved on the recursive function's own postcondition.
+                 The rest follows in one step and is labelled so: Score never
+                 exceeds support (both conflicts are non-negative), never
+                 exceeds the sample's length, never falls below minus the two
+                 lengths; and Mutual_Containment_Scores_Full is a corollary of
+                 the two partitions under its precondition.
 
                  Solver grade: all three of Z3, CVC5 and Alt-Ergo alone
                  discharge every check of this package.

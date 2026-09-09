@@ -273,12 +273,15 @@ been published proved-here-only because admission had not run; they were admitte
 shipped bytes on the evening of 2026-09-08, together with the two new cores. Check:
 `shasum -a 256 */*.ads` against `source_sha256` in `receipts/verify-receipts.jsonl`.
 
-⚠ **You cannot currently verify a receipt from what is shipped.** `receipts/`
-contains the signer's public key and the receipt records, but not the exact byte
-encoding that was signed, so `ssh-keygen -Y verify` cannot be reproduced from this
-repository alone. That is a gap in what we publish, not evidence of a bad receipt —
-and until it is closed, the receipts are worth exactly as much as your trust in us,
-which is less than we would like.
+**You can verify a receipt from what is shipped** (corrected 2026-09-09; an earlier version
+of this paragraph said you could not, because we had not written down the exact bytes that
+were signed). The signed body is the receipt record with two fields removed — `signature_b64`
+and `admitted`, which are appended after signing — in the field order shown, with no trailing
+newline. `jq -c 'del(.signature_b64, .admitted)'` reproduces it. The signature is the
+`signature_b64` value, base64-decoded, and the signer is `admitter` under namespace
+`df-admission` against the key in `receipts/admitter-interim-2026-08.pub`. Rehearsed on
+2026-09-09 against a fresh receipt: `Good "df-admission" signature for admitter with ED25519 key
+SHA256:vip8puBd…`.
 
 Each core was re-proved on a machine that did not produce it, and that machine
 signed a receipt binding the core name, the SHA-256 of the exact source, its own
@@ -289,9 +292,12 @@ ledger timestamp, and the hash of the component that judged it. See
 # hashes must match the shipped source
 shasum -a 256 */*.ads
 
-# signature, against the published key
-ssh-keygen -Y verify -f allowed_signers -I admitter -n df-admission \
-           -s receipt.sig < receipt-body.json
+# one receipt: rebuild the signed body and the signature, then verify
+R=20 20 12 61 79 80 81 33 98 100 204 250 395 398 399 400grep '"core":"metro_index_map_pkg"' receipts/verify-receipts.jsonl | tail -1)
+printf '%s' "" | jq -c 'del(.signature_b64, .admitted)' | tr -d '\n' > receipt-body.json
+printf '%s' "" | jq -r .signature_b64 | base64 -d > receipt.sig
+printf 'admitter namespaces="df-admission" %s\n' "20 20 12 61 79 80 81 33 98 100 204 250 395 398 399 400cat receipts/admitter-interim-2026-08.pub)" > allowed_signers
+ssh-keygen -Y verify -f allowed_signers -I admitter -n df-admission -s receipt.sig < receipt-body.json
 ```
 
 ⚠ The signing key is an **interim software key**, not hardware. The honest word

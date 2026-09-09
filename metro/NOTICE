@@ -15,8 +15,33 @@ What is provided is a re-expression, in SPARK Ada, of the behaviour of specific
 subprograms, together with formal contracts stating properties the original
 relies on, machine-checked with GNATprove.
 
-Converted from : src/model/array2matrix.f
-Cores          : metro_index_map_pkg
+Converted from : src/model/array2matrix.f (metro_index_map_pkg) and
+                 src/model/grille.f:107-116 (GRILLE, the FLAT branch:
+                 dpFluxDepth(j) = j*DY, dpTemperatureDepth(j) = (j-0.5)*DY,
+                 iref = int(ZONES(NZONE)/DY), ir40 = last j with
+                 dpTemperatureDepth(j) <= dSstDepth), read at the pinned commit
+                 (road_grid_levels_pkg).
+Cores          : metro_index_map_pkg, road_grid_levels_pkg
+
+                 ⚠ SCOPE of road_grid_levels_pkg, narrower than upstream. Depths
+                 are whole half-steps so the half-step offset is exact; upstream
+                 uses REAL arithmetic and DY = max(0.01, ZONES(NZONE)/n). Only
+                 the FLAT grid is modelled — the exponential grid of the ELSE
+                 branch (lines 117-137) is not. The material-property
+                 interpolation that follows (lines 139-170) is not modelled.
+                 Upstream bounds ir40 by iref as well; this core characterises
+                 each count on its own. Levels are capped at 200 and the
+                 half-step at 1000 units.
+
+                 What is proved: each temperature level lies strictly between
+                 the flux level above and the flux level below it, and is
+                 exactly their midpoint; the level count within the structure
+                 depth is the largest level whose flux depth does not exceed it;
+                 the count at or above the sensor is the largest level whose
+                 temperature depth does not exceed it. The two count theorems
+                 are about integer division and are the ones that carry weight;
+                 the midpoint and interleaving follow from the layout by
+                 arithmetic on bounded operands.
 
 Copyright in the upstream work remains with its authors. This derived work is
 (c) 2026 The Dark Factory Ltd and is offered under the same licence as the

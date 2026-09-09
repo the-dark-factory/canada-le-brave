@@ -12,7 +12,7 @@ federal bodies.
 > the wrong algorithm under a Statistics Canada notice. An adversarial review caught
 > both before publication. An audit of all ten then found two MORE cores proving
 > nothing, and both had been signed by two machines. All corrections are kept below
-> rather than quietly removed. What began as ten cores across five libraries became eight across four; on 2026-09-08 two libraries were added, one of them the one that had left, and it is ten across six.
+> rather than quietly removed. What began as ten cores across five libraries became eight across four; on 2026-09-08 two libraries were added, one of them the one that had left, and a second METRo core and a second Banff core followed: twelve across six.
 >
 > Every number on this page was re-measured from these sources at this commit, on a
 > clean object directory, because a cached one overstated them by 40% during that
@@ -38,12 +38,12 @@ Now some has been. It is small, specific, and re-runnable by anyone.
 |---|---|---|---|
 | [EGSnrc](https://github.com/nrc-cnrc/EGSnrc) | National Research Council | AGPL-3.0 | 6 |
 | [libECBUFR](https://github.com/ECCC-MSC/libecbufr) | Environment and Climate Change Canada | GPL-3.0 | 1 |
-| [METRo](https://framagit.org/metroprojects/metro) | Environment and Climate Change Canada | GPL-2.0 | 1 |
-| [gensol-banff](https://github.com/StatCan/gensol-banff) | Statistics Canada | GPL-3.0 | 1 |
+| [METRo](https://framagit.org/metroprojects/metro) | Environment and Climate Change Canada | GPL-2.0 | 2 |
+| [gensol-banff](https://github.com/StatCan/gensol-banff) | Statistics Canada | GPL-3.0 | 2 |
 | [crc-covlib](https://github.com/ic-crc/crc-covlib) | ISED / Communications Research Centre Canada | MIT | 1 |
 | [rebar](https://github.com/phac-nml/rebar) | Public Health Agency of Canada | Apache-2.0 | 1 |
 
-**Ten cores. Six libraries. Five departments. 218 proof obligations, none unproved.**
+**Twelve cores. Six libraries. Five departments. 257 proof obligations, none unproved.**
 
 A **core** is not a rewrite. It is one small piece of the original — a function,
 or a tight cluster of them — re-expressed in SPARK Ada with the properties the
@@ -60,15 +60,15 @@ git clone <this repo> && cd canada-le-brave
 gnatprove -P check.gpr --level=2
 ```
 
-Expect **218 checks, 0 unproved**, of which **64 are functional contracts**.
+Expect **257 checks, 0 unproved**, of which **78 are functional contracts**.
 
-**What that buys, in plain terms.** The 64 functional contracts mean the stated
+**What that buys, in plain terms.** The 78 functional contracts mean the stated
 properties are proved — not tested on examples, but proved for every input
-satisfying the preconditions. The 97 run-time checks mean this source is proved
+satisfying the preconditions. The 110 run-time checks mean this source is proved
 free of integer overflow, division by zero, and range and index violations,
 within the SPARK subset and those preconditions, for **all** admissible inputs.
 In SPARK terms that is *absence of run-time errors*, and it is normally the
-expensive part. 57 termination checks discharge too. **Nothing is justified
+expensive part. 69 termination checks discharge too. **Nothing is justified
 away** — GNATprove allows unproved checks to be dismissed with a `pragma
 Annotate`; there are none in this repository. 0 unproved, 0 justified, 0
 suppressed.
@@ -177,7 +177,7 @@ figures above were measured from the current sources on a clean object directory
 a cached one inflated them by 40% once during this very correction.
 
 **Solver grade, stated exactly.** Run each back-end alone, from a clean session,
-and you get: **Z3 — 1 unproved; CVC5 — 4; Alt-Ergo — 5.** No single prover clears
+and you get: **Z3 — 2 unproved; CVC5 — 5; Alt-Ergo — 10.** No single prover clears
 everything, so the clean total depends on the three being used together. One check
 is discharged trivially. We would rather you heard all of that from us.
 
@@ -216,9 +216,26 @@ from the claim rather than added as an assumption. That is what a prover is for.
 Both NOTICEs state scope: whole-unit models, multiply-before-divide where upstream
 divides first in doubles, the table search and the coordinate filtering not modelled.
 
+**`road_grid_levels_pkg` — METRo, a second core (2026-09-09).** The flat-grid branch of
+`grille.f:107-116`: flux levels at whole steps, temperature levels at half steps. Proved: each
+temperature level lies strictly between its two flux levels and is exactly their midpoint, and
+the two level counts the model reads off — levels within the structure depth, levels at or above
+the buried sensor — are each the largest level whose depth does not exceed the depth asked
+about. The count theorems are integer-division facts and carry the weight. Only the flat grid is
+modelled; the exponential grid is not. Proved on the first round.
+
+**`donor_limit_pkg` — gensol-banff, a second core (2026-09-09).** The donor-imputation cap in
+`EI_Donor.c:5-27` and the enough-donors gate at `:48-60`. Proved: the rounded-up ratio of
+recipients to donors is exactly the least count whose multiple by the donors reaches the
+recipients; the limit is at least one, at least the fixed count when set, and when the multiplier
+is at least 1.00 it is at least that ratio, so the donors together can cover every recipient
+without any donor exceeding the cap; and one more non-recipient respondent can never turn "enough
+donors" into "not enough". Whole units where upstream uses doubles, `ceil()` and a tolerance
+compare; the NOTICE says so. Proved on the first round.
+
 ## Receipts
 
-**All ten cores carry a receipt, and every receipt's hash matches the shipped source.** Two of
+**All twelve cores carry a receipt, and every receipt's hash matches the shipped source.** Two of
 the eight cores of the morning — `Bit_Field_Packing_Pkg` and `Carry_Forward_Rounding_Pkg` — had
 been published proved-here-only because admission had not run; they were admitted from the
 shipped bytes on the evening of 2026-09-08, together with the two new cores. Check:

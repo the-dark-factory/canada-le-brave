@@ -12,7 +12,7 @@ federal bodies.
 > the wrong algorithm under a Statistics Canada notice. An adversarial review caught
 > both before publication. An audit of all ten then found two MORE cores proving
 > nothing, and both had been signed by two machines. All corrections are kept below
-> rather than quietly removed. What began as ten cores across five libraries became eight across four; on 2026-09-08 two libraries were added, one of them the one that had left, and a second METRo core and a second Banff core followed: twelve across six.
+> rather than quietly removed. What began as ten cores across five libraries became eight across four; on 2026-09-08 two libraries were added, one of them the one that had left, and a second METRo core followed; a second Banff core was shipped for a few hours and withdrawn as a trick: eleven across six.
 >
 > Every number on this page was re-measured from these sources at this commit, on a
 > clean object directory, because a cached one overstated them by 40% during that
@@ -39,11 +39,11 @@ Now some has been. It is small, specific, and re-runnable by anyone.
 | [EGSnrc](https://github.com/nrc-cnrc/EGSnrc) | National Research Council | AGPL-3.0 | 6 |
 | [libECBUFR](https://github.com/ECCC-MSC/libecbufr) | Environment and Climate Change Canada | GPL-3.0 | 1 |
 | [METRo](https://framagit.org/metroprojects/metro) | Environment and Climate Change Canada | GPL-2.0 | 2 |
-| [gensol-banff](https://github.com/StatCan/gensol-banff) | Statistics Canada | GPL-3.0 | 2 |
+| [gensol-banff](https://github.com/StatCan/gensol-banff) | Statistics Canada | GPL-3.0 | 1 |
 | [crc-covlib](https://github.com/ic-crc/crc-covlib) | ISED / Communications Research Centre Canada | MIT | 1 |
 | [rebar](https://github.com/phac-nml/rebar) | Public Health Agency of Canada | Apache-2.0 | 1 |
 
-**Twelve cores. Six libraries. Five departments. 245 proof obligations, none unproved — 72 of them functional contracts; the rest are run-time and termination checks.**
+**Eleven cores. Six libraries. Five departments. 226 proof obligations, none unproved — 64 of them functional contracts; the rest are run-time and termination checks.**
 
 A **core** is not a rewrite. It is one small piece of the original — a function,
 or a tight cluster of them — re-expressed in SPARK Ada with the properties the
@@ -60,15 +60,15 @@ git clone <this repo> && cd canada-le-brave
 gnatprove -P check.gpr --level=2
 ```
 
-Expect **245 checks, 0 unproved**, of which **72 are functional contracts**.
+Expect **226 checks, 0 unproved**, of which **64 are functional contracts**.
 
-**What that buys, in plain terms.** The 72 functional contracts mean the stated
+**What that buys, in plain terms.** The 64 functional contracts mean the stated
 properties are proved — not tested on examples, but proved for every input
-satisfying the preconditions. The 108 run-time checks mean this source is proved
+satisfying the preconditions. The 103 run-time checks mean this source is proved
 free of integer overflow, division by zero, and range and index violations,
 within the SPARK subset and those preconditions, for **all** admissible inputs.
 In SPARK terms that is *absence of run-time errors*, and it is normally the
-expensive part. 65 termination checks discharge too. **Nothing is justified
+expensive part. 59 termination checks discharge too. **Nothing is justified
 away** — GNATprove allows unproved checks to be dismissed with a `pragma
 Annotate`; there are none in this repository. 0 unproved, 0 justified, 0
 suppressed.
@@ -177,7 +177,7 @@ figures above were measured from the current sources on a clean object directory
 a cached one inflated them by 40% once during this very correction.
 
 **Solver grade, stated exactly.** Run each back-end alone, from a clean session,
-and you get: **Z3 — 1 unproved; CVC5 — 5; Alt-Ergo — 8.** No single prover clears
+and you get: **Z3 — 1 unproved; CVC5 — 5; Alt-Ergo — 7.** No single prover clears
 everything, so the clean total depends on the three being used together. One check
 is discharged trivially. We would rather you heard all of that from us.
 
@@ -219,29 +219,35 @@ than quietly made.
 **`road_grid_levels_pkg` — METRo, a second core.** The flat-grid branch of `grille.f:161-177`.
 **Kept, and strengthened:** the two level counts the model reads off — levels within the
 structure depth, levels at or above the buried sensor — are each exactly the largest level whose
-depth does not exceed the depth asked about; the shipped version had a top-level escape clause
-the prover turns out not to need, so it is gone. **Withdrawn:** four contracts. A midpoint
+depth does not exceed the depth asked about, or zero for the sensor count when even the first
+level is deeper (upstream leaves that value uninitialised; returning zero is our choice, and the
+NOTICE says so). The shipped version had two top-level escape clauses, one per count, that the
+prover turns out not to need; both are gone. The zero case remains, by design. **Withdrawn:** four contracts. A midpoint
 contract reduced to `X = X` — the prover reported both arguments unused, which is the clearest
 collapse in this repository's history and it was signed by two machines. An interleaving
 contract reduced to `2J-2 < 2J-1 < 2J`. Two depth functions carried postconditions that restated
 a subtype. The first NOTICE also cited lines about fifty off; corrected.
 
-**`donor_limit_pkg` — gensol-banff, a second core.** The donor-imputation cap in
-`EI_Donor.c:7-32` and the enough-donors gate at `:52-68`. **Kept:** the two ceiling
-characterisations (the rounded-up ratio is exactly the least count whose multiple by the donors
-reaches the recipients); the limit's lower bounds; and, when a multiplier of at least 1.00 is set,
-that the limit reaches that ratio so every recipient can be served under the cap. **Withdrawn:**
-the enough-donors postcondition, which half of its own body discharged. **Declared:** two subtypes
-that do real work — zero donors is made unrepresentable where upstream would divide by zero, and
-the fixed count's lower bound of one rests on upstream's own validation. The NOTICE says so.
+**`donor_limit_pkg` — gensol-banff — WITHDRAWN the same morning.** A second Banff core, the
+donor-imputation cap in `EI_Donor.c:7-32` and the enough-donors gate at `:52-68`, was shipped for
+a few hours. It proved clean, was signed, and survived the adversarial review with one contract
+removed — the enough-donors postcondition, which half of its own body discharged. Then the
+re-forge that was meant to remove that contract failed silently, and the file was pushed unchanged
+while two documents said it had been fixed; the second review caught that. And then it failed the
+test that matters: its two weight-bearing theorems say that rounding-up division is rounding-up
+division. Nothing in them is about Banff's algorithm. The one case a Statistics Canada reader
+would want — zero donors, where upstream divides unguarded — was made unrepresentable by a subtype
+rather than examined. **A generic lemma under a library's notice is a trick even when every
+obligation is real**, and every mechanical gate passes it by construction. Withdrawn on that
+judgement; its NOTICE keeps the account.
 
-All three affected cores were re-forged through the same door with the withdrawn contracts
-removed, re-proved, and re-admitted from the shipped bytes. The counts at the top of this page
-are the re-measured ones.
+The two surviving affected cores were re-forged through the same door with the withdrawn
+contracts removed, re-proved, and re-admitted from the shipped bytes; the third was withdrawn.
+The counts at the top of this page are the re-measured ones.
 
 ## Receipts
 
-**All twelve cores carry a receipt, and every receipt's hash matches the shipped source.** Two of
+**All eleven cores carry a receipt, and every receipt's hash matches the shipped source.** Two of
 the eight cores of the morning — `Bit_Field_Packing_Pkg` and `Carry_Forward_Rounding_Pkg` — had
 been published proved-here-only because admission had not run; they were admitted from the
 shipped bytes on the evening of 2026-09-08, together with the two new cores. Check:

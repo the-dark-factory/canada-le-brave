@@ -23,8 +23,8 @@ The pipeline that produced these files is:
 4. **GNATprove** — an ordinary, independent, publicly available prover, run
    locally — checked the result against the stated contracts.
 5. A **second machine we own**, of different architecture and toolchain,
-   re-ran the proof from the source alone and signed a receipt — for twelve of the
-   twelve. See `receipts/`.
+   re-ran the proof from the source alone and signed a receipt — for eleven of the
+   eleven. See `receipts/`.
 
 So: one human decision, two different AI systems at two different stages, and
 two mechanical checks. Steps 4 and 5 are the ones that decide whether anything
@@ -70,9 +70,9 @@ It would be as dishonest to undersell this as to oversell it. Machine-generated
 code that nobody checked would be worthless. This is checked, and checked harder
 than most hand-written code ever is:
 
-- **The stated properties are proved.** 72 functional contracts discharge. Not
+- **The stated properties are proved.** 64 functional contracts discharge. Not
   tested on examples — proved, for every input satisfying the preconditions.
-- **Absence of run-time errors is proved.** 108 run-time checks discharge. Within
+- **Absence of run-time errors is proved.** 103 run-time checks discharge. Within
   the SPARK subset and the stated preconditions, this source is proved free of
   integer overflow, division by zero, range and index violations, and aliasing
   faults — for **all** admissible inputs, not for the ones somebody thought to
@@ -112,7 +112,7 @@ excluded, it was excluded.
   a `Storage_Error` stack overflow on Linux/x86-64. Reported upstream as
   AdaCore/spark2014 issue #69.
 
-  Neither that nor anything like it affects the twelve cores published here — none
+  Neither that nor anything like it affects the eleven cores published here — none
   uses the construct, and all ten discharge cleanly on the released toolchain,
   which you can confirm yourself. But a reader who assumes the trusted base is
   flawless should not.

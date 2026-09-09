@@ -43,7 +43,7 @@ Cores          : parsimony_score_pkg — S is the sample list, Q the population.
                    substitutions distinct preserves every statement here.
                  · Lists hold at most 8 keys.
                  · The exclusion of missing and deleted coordinates and the
-                   optional coordinate filter (lines 41-58) are NOT modelled.
+                   optional coordinate filter (lines 41-54) are NOT modelled.
                    The core takes the two lists as already filtered.
 
                  WHAT THE PROVER REFUSED, kept on the record. The first claim

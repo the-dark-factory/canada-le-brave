@@ -18,7 +18,7 @@ What is provided is a re-expression, in SPARK Ada, of the behaviour of specific
 subprograms, together with formal contracts stating properties the original
 relies on, machine-checked with GNATprove.
 
-Converted from : src/AntennaPattern.cpp:553-565 (pGainInterpolation, the dB
+Converted from : src/AntennaPattern.cpp:553-564 (pGainInterpolation, the dB
                  branch), as called from GetHPatternGain at :64-108, read at
                  the pinned commit — reading the gain off the straight line
                  between two neighbouring entries of the horizontal antenna
@@ -43,17 +43,21 @@ Cores          : antenna_pattern_gain_pkg
                  · Whole tenths of a degree and tenths of a decibel. Upstream
                    works in doubles.
                  · Upstream divides before it multiplies; this core multiplies
-                   first and truncates toward zero. The band theorem also holds
-                   with upstream's order in whole units, so this is a statement
-                   of what was proved, not a load-bearing difference.
+                   first and truncates toward zero. For the BAND theorem this is
+                   not load-bearing — it also holds with upstream's order in
+                   whole units. For Ends_At_Second it IS: with upstream's order
+                   in whole units, G1=0, G2=1, A1=0, A2=10 gives 10*(1/10) = 0,
+                   not 1. Exactness at the second endpoint is a property of the
+                   re-ordered integer expression, not of upstream's order and
+                   not exactly of upstream's doubles.
                  · Bounds are OURS: gains -100.0 .. +100.0 dB (upstream has no
                    stated bound); azimuths -360.0 .. +719.9 as the extended
                    range after the wrap adjustment. Upstream's header states
                    entry azimuths as 0 to 359.99; this core's tenths cannot
                    represent the last hundredth of that.
                  · The precondition A1 < A2 excludes upstream's `angle2-angle1
-                   == 0` branch (line 555), which returns gain1 for duplicate
-                   azimuths. Duplicates are not rejected upstream
+                   == 0` else-branch (test at line 555, `return gain1` at 563)
+                   for duplicate azimuths. Duplicates are not rejected upstream
                    (AddHPatternEntry sorts by azimuth only). That branch is not
                    modelled.
                  · The linear-power branch (linearGainInterpolation true), the
@@ -68,8 +72,10 @@ Cores          : antenna_pattern_gain_pkg
                  alone cannot discharge them. Starts_At_First is immediate: the
                  offset is zero.
 
-                 Solver grade, on this file as shipped: Z3 alone discharges
-                 everything. CVC5 alone and Alt-Ergo alone each leave 3 — the
+                 Solver grade, on this file as shipped, at --level=2 with one
+                 prover process (-j1); other levels and job counts move these
+                 numbers: Z3 alone discharges everything. CVC5 alone and
+                 Alt-Ergo alone each leave 3 — the
                  lower band bound (12:19), the result range check (18:10) and
                  Ends_At_Second (35:19).
 
